@@ -3,6 +3,7 @@
 
 CTrade Trade;
 CChartObjectLabel lblTotalBuyLot, lblTotalSellLot, lblTotalLots;
+CChartObjectText txtTimeCountDown;
 
 // Input parameters
 input double  LotSize         = 0.01;      // Khối lượng từng lệnh
@@ -28,10 +29,11 @@ int OnInit() {
     
     int x = (int)ChartGetInteger(0, CHART_WIDTH_IN_PIXELS) - 200;
     
-    if(!CreateLabel(lblTotalBuyLot, "TotalBuyLot", "Total Buy Lots: 0.00", x, 30)) return(INIT_FAILED);
-    if(!CreateLabel(lblTotalSellLot, "TotalSellLot", "Total Sell Lots: 0.00", x, 60)) return(INIT_FAILED);
-    if(!CreateLabel(lblTotalLots, "TotalLots", "Total Lots: 0.00", x, 90)) return(INIT_FAILED);
+    if(!CreateLable(lblTotalBuyLot, "TotalBuyLot", "Total Buy Lots: 0.00", x, 30)) return(INIT_FAILED);
+    if(!CreateLable(lblTotalSellLot, "TotalSellLot", "Total Sell Lots: 0.00", x, 60)) return(INIT_FAILED);
+    if(!CreateLable(lblTotalLots, "TotalLots", "Total Lots: 0.00", x, 90)) return(INIT_FAILED);
 
+    if(!CreateText(txtTimeCountDown, "TimeCountDown", "Countdown:  s")) return(INIT_FAILED);
     ChartRedraw(0);
     return (INIT_SUCCEEDED);
 }
@@ -50,6 +52,18 @@ void OnTimer() {
     lblTotalBuyLot.Description("Total Buy Lots: " + DoubleToString(g_buyLots, 2));
     lblTotalSellLot.Description("Total Sell Lots: " + DoubleToString(g_sellLots, 2));
     lblTotalLots.Description("Daily Lots: " + DoubleToString(GetDailyTradedLots(), 2));
+
+    // Cập nhật countdown đến nến tiếp theo
+    datetime currentTime = TimeCurrent();
+    datetime nextCandleTime = iTime(_Symbol, PERIOD_CURRENT, 0) + PeriodSeconds(PERIOD_CURRENT);
+    int secondsToNextCandle = (int)(nextCandleTime - currentTime - 1);
+
+    txtTimeCountDown.Description("    " + IntegerToString(secondsToNextCandle) + "s");
+    double currentPrice = iClose(_Symbol, PERIOD_CURRENT, 0);
+   
+    txtTimeCountDown.Time(0,nextCandleTime);
+    txtTimeCountDown.Price(0,currentPrice);
+
     ChartRedraw();
 }
 
@@ -211,15 +225,32 @@ void ExecuteHedge(double bLots, double sLots) {
 //+------------------------------------------------------------------+
 //| Tạo Label UI                                                     |
 //+------------------------------------------------------------------+
-bool CreateLabel(CChartObjectLabel &label, string name, string des, int x, int y) {
-    if(!label.Create(0, name, 0, x, y)) return false;
-    label.Description(des);
-    label.Color(clrWhite);
-    label.Font("Calibri");
-    label.FontSize(12);
+bool CreateLable(CChartObjectLabel &lable, string name, string des, int x, int y){
+    // Tạo lable và thiết lập thuộc tính
+    if(!lable.Create(0, name, 0, x, y))
+        return false;
+
+    lable.Description(des);
+    lable.Color(clrWhite);
+    lable.Font("Calibri");
+    lable.FontSize(12);
+
     return true;
 }
 
+bool CreateText(CChartObjectText &txtObj, string name, string des){
+    // Khởi tạo ở thời gian 0, giá 0. Sau đó sẽ di chuyển sau.
+    if(!txtObj.Create(0, name, 0, 0, 0.0))
+        return false;
+
+    txtObj.Description(des);
+    txtObj.Color(clrWhite);
+    txtObj.Font("Calibri");
+    txtObj.FontSize(12);
+    txtObj.Anchor(ANCHOR_LEFT); // Canh lề trái để chữ nằm ngay bên phải nến
+    
+    return true;
+}
 //+------------------------------------------------------------------+
 //| Phân tích hành vi nến                                            |
 //+------------------------------------------------------------------+
