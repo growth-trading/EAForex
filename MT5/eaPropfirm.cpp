@@ -18,7 +18,7 @@ input color CountdownColor = clrBlack; // Màu sắc countdown time
 // Global variables
 datetime CandleCloseTime; // Biến kiểm tra giá chạy 1p một lần 
 bool SlBeEnabled = false; // Biến kiểm soát dời SL về điểm hòa vốn
-bool AlertCheckEnabled = false; // Biến kiểm soát kiểm tra giá với EMA
+bool AlertCheckEnabled = true; // Biến kiểm soát kiểm tra giá với EMA
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
@@ -327,11 +327,11 @@ void CheckPriceWithEMA(){
    if(CopyBuffer(handleM1, 0, 0, 1, emaM1) <= 0) return;
    if(CopyBuffer(handleM5, 0, 0, 1, emaM5) <= 0) return;  
 
-   double high = iClose(_Symbol, PERIOD_CURRENT, 0), low = iClose(_Symbol, PERIOD_CURRENT, 0);
+   double high = iHigh(_Symbol, PERIOD_CURRENT, 0), low = iLow(_Symbol, PERIOD_CURRENT, 0);
 
    double emaPriceM1 = emaM1[0];
    double emaPriceM5 = emaM5[0];
-
+  
    if(high > emaPriceM1 && low < emaPriceM1){
       Alert("Giá đã chạm EMA25 M1");
    }
