@@ -10,10 +10,11 @@ CChartObjectText txtTimeCountDown;
 
 // Input parameters
 input group "=== GENERAL ===";
-input double InpMaxLossAmount = 15.0;             // Số tiền rủi ro tối đa trên mỗi lệnh (Ví dụ: 100$)
-input int FIVE = 50;                              // Số pip để đặt SL/TP cách điểm hòa vốn
+input double InpMaxLossAmount =
+    15.0;             // Số tiền rủi ro tối đa trên mỗi lệnh (Ví dụ: 100$)
+input int FIVE = 50;  // Số pip để đặt SL/TP cách điểm hòa vốn
 input group "=== COLOR TEXT ===";
-input color CountdownColor = clrBlack;            // Màu sắc countdown time
+input color CountdownColor = clrBlack;  // Màu sắc countdown time
 
 // Global variables
 datetime CandleCloseTime;       // Biến kiểm tra giá chạy 1p một lần
@@ -32,15 +33,19 @@ int OnInit() {
     if(!CreateButton(btnSLBE, "SLBEButton", "BREAK EVEN", clrGreen, x, y - 100))
         return (INIT_FAILED);
 
-    if(!CreateButton(btnAlertCheck, "AlertCheckButton", "CHECK EMA: ON", clrBlue, x, y - 50))
+    if(!CreateButton(btnAlertCheck, "AlertCheckButton", "CHECK EMA: ON",
+                     clrBlue, x, y - 50))
         return (INIT_FAILED);
 
     // Tạo label
-    if(!CreateLable(lblTotalSL, "TotalSLLabel", "Total SL: 0.00 USD", x, 30)) return (INIT_FAILED);
+    if(!CreateLable(lblTotalSL, "TotalSLLabel", "Total SL: 0.00 USD", x, 30))
+        return (INIT_FAILED);
 
-    if(!CreateLable(lblTotalTP, "TotalTP", "Total TP: 0.00 USD", x, 60)) return (INIT_FAILED);
+    if(!CreateLable(lblTotalTP, "TotalTP", "Total TP: 0.00 USD", x, 60))
+        return (INIT_FAILED);
 
-    if(!CreateText(txtTimeCountDown, "TimeCountDown", "Countdown:  s")) return (INIT_FAILED);
+    if(!CreateText(txtTimeCountDown, "TimeCountDown", "Countdown:  s"))
+        return (INIT_FAILED);
 
     ChartRedraw(0);
 
@@ -50,16 +55,19 @@ int OnInit() {
 void OnTimer() {
     // Check current time and next M1 candle close time
     datetime currentTime = TimeCurrent();
-    datetime currentCandleCloseTime = iTime(_Symbol, PERIOD_M1, 0) + PeriodSeconds(PERIOD_M1);
+    datetime currentCandleCloseTime =
+        iTime(_Symbol, PERIOD_M1, 0) + PeriodSeconds(PERIOD_M1);
 
     int secondsToNextCandle = (int)(currentCandleCloseTime - currentTime - 1);
-    txtTimeCountDown.Description("    " + IntegerToString(secondsToNextCandle) + "s");
+    txtTimeCountDown.Description("    " + IntegerToString(secondsToNextCandle) +
+                                 "s");
 
     txtTimeCountDown.Time(0, currentCandleCloseTime);
     txtTimeCountDown.Price(0, iClose(_Symbol, PERIOD_CURRENT, 0));
 
     bool isRunningEa = false;
-    if(currentCandleCloseTime != CandleCloseTime && currentCandleCloseTime - currentTime <= 2) {
+    if(currentCandleCloseTime != CandleCloseTime &&
+       currentCandleCloseTime - currentTime <= 2) {
         CandleCloseTime = currentCandleCloseTime;
         isRunningEa = true;
     }
@@ -85,7 +93,8 @@ void OnTick() {
     }
 }
 
-void OnChartEvent(const int id, const long& lparam, const double& dparam, const string& sparam) {
+void OnChartEvent(const int id, const long& lparam, const double& dparam,
+                  const string& sparam) {
     // Nhấn nút dời SL về điểm hòa vốn
     if(id == CHARTEVENT_OBJECT_CLICK && sparam == "SLBEButton") {
         SlBeEnabled = !SlBeEnabled;
@@ -120,25 +129,30 @@ void MoveSLBE() {
             double currentTP = PositionGetDouble(POSITION_TP);
             double currentSL = PositionGetDouble(POSITION_SL);
             double profit = PositionGetDouble(POSITION_PROFIT);
-            ENUM_POSITION_TYPE type = (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
+            ENUM_POSITION_TYPE type =
+                (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
 
-            double newPosition =
-                (type == POSITION_TYPE_BUY) ? openPrice + FIVE * _Point : openPrice - FIVE * _Point;
+            double newPosition = (type == POSITION_TYPE_BUY)
+                                     ? openPrice + FIVE * _Point
+                                     : openPrice - FIVE * _Point;
 
             if(profit > 0) {
                 if(!Trade.PositionModify(ticket, newPosition, currentTP)) {
-                    Print("Failed to modify position #", ticket, ". Error: ", GetLastError());
+                    Print("Failed to modify position #", ticket,
+                          ". Error: ", GetLastError());
                 }
             } else {
                 if(!Trade.PositionModify(ticket, currentSL, newPosition)) {
-                    Print("Failed to modify position #", ticket, ". Error: ", GetLastError());
+                    Print("Failed to modify position #", ticket,
+                          ". Error: ", GetLastError());
                 }
             }
         }
     }
 }
 
-bool CreateButton(CChartObjectButton& button, string name, string des, color bgColor, int x, int y) {
+bool CreateButton(CChartObjectButton& button, string name, string des,
+                  color bgColor, int x, int y) {
     // Tạo nút và thiết lập thuộc tính
     if(!button.Create(0, name, 0, x, y, 175, 35)) return false;
 
@@ -153,7 +167,8 @@ bool CreateButton(CChartObjectButton& button, string name, string des, color bgC
     return true;
 }
 
-bool CreateLable(CChartObjectLabel& lable, string name, string des, int x, int y) {
+bool CreateLable(CChartObjectLabel& lable, string name, string des, int x,
+                 int y) {
     // Tạo lable và thiết lập thuộc tính
     if(!lable.Create(0, name, 0, x, y)) return false;
 
@@ -202,7 +217,8 @@ void DrawMarkerPrice(ENUM_TIMEFRAMES timeframe, color lineColor) {
     ObjectSetInteger(0, lineName, OBJPROP_WIDTH, 2);
 
     ObjectCreate(0, textName, OBJ_TEXT, 0, start, price + 52 * _Point);
-    ObjectSetString(0, textName, OBJPROP_TEXT, StringSubstr(EnumToString(timeframe), 7));
+    ObjectSetString(0, textName, OBJPROP_TEXT,
+                    StringSubstr(EnumToString(timeframe), 7));
     ObjectSetInteger(0, textName, OBJPROP_COLOR, lineColor);
     ObjectSetInteger(0, textName, OBJPROP_ANCHOR, ANCHOR_LEFT_UPPER);
     ObjectSetInteger(0, textName, OBJPROP_FONTSIZE, 10);
@@ -232,7 +248,8 @@ void CalculateForLable() {
 
             double price = PositionGetDouble(POSITION_PRICE_OPEN);
             double volume = PositionGetDouble(POSITION_VOLUME);
-            ENUM_POSITION_TYPE type = (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
+            ENUM_POSITION_TYPE type =
+                (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
 
             if(sl != 0) {
                 double diff = 0;
@@ -266,7 +283,8 @@ void CalculateForLable() {
 void ModifyStopLoss(ulong ticket, double newStopLoss, double currentTP) {
     newStopLoss = NormalizeDouble(newStopLoss, _Digits);
     if(!Trade.PositionModify(ticket, newStopLoss, currentTP)) {
-        Print("Failed to modify position #", ticket, ". Error: ", GetLastError());
+        Print("Failed to modify position #", ticket,
+              ". Error: ", GetLastError());
     }
 }
 
@@ -282,12 +300,14 @@ void CheckAndAdjustStopLoss() {
             double currentSL = PositionGetDouble(POSITION_SL);
             double curentTP = PositionGetDouble(POSITION_TP);
 
-            double tickValue = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
+            double tickValue =
+                SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
             double tickSize = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
 
             if(tickValue <= 0) continue;  // Tránh lỗi chia cho 0
 
-            double slDistance = (InpMaxLossAmount / (lot * tickValue * 100)) * tickSize;
+            double slDistance =
+                (InpMaxLossAmount / (lot * tickValue * 100)) * tickSize;
             double targetSL = 0;
 
             if(type == POSITION_TYPE_BUY) {
@@ -320,16 +340,30 @@ void CheckPriceWithEMA() {
     if(CopyBuffer(handleM1, 0, 0, 1, emaM1) <= 0) return;
     if(CopyBuffer(handleM5, 0, 0, 1, emaM5) <= 0) return;
 
-    double high = iHigh(_Symbol, PERIOD_CURRENT, 0), low = iLow(_Symbol, PERIOD_CURRENT, 0);
+    double high = iHigh(_Symbol, PERIOD_CURRENT, 0),
+           low = iLow(_Symbol, PERIOD_CURRENT, 0);
 
     double emaPriceM1 = emaM1[0];
     double emaPriceM5 = emaM5[0];
 
+    bool alertChecked = false;
     if(high > emaPriceM1 && low < emaPriceM1) {
         Alert("Giá đã chạm EMA25 M1");
+        alertChecked = true;
+    } else if(high > emaPriceM5 && low < emaPriceM5) {
+        Alert("Giá đã chạm EMA25 M5");
+        alertChecked = true;
     }
 
-    if(high > emaPriceM5 && low < emaPriceM5) {
-        Alert("Giá đã chạm EMA25 M5");
+    if(alertChecked) {
+        AlertCheckEnabled = !AlertCheckEnabled;
+
+        if(AlertCheckEnabled) {
+            btnAlertCheck.Description("CHECK EMA: ON");
+            btnAlertCheck.BackColor(clrBlue);
+        } else {
+            btnAlertCheck.Description("CHECK EMA: OFF");
+            btnAlertCheck.BackColor(clrRed);
+        }
     }
 }
