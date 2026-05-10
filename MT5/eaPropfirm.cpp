@@ -10,11 +10,10 @@ CChartObjectText txtTimeCountDown;
 
 // Input parameters
 input group "=== GENERAL ===";
-input double InpMaxLossAmount =
-    15.0;             // Số tiền rủi ro tối đa trên mỗi lệnh (Ví dụ: 100$)
-input int FIVE = 50;  // Số pip để đặt SL/TP cách điểm hòa vốn
+input double InpMaxLossAmount = 15.0;             // Số tiền rủi ro tối đa trên mỗi lệnh (Ví dụ: 100$)
+input int FIVE = 50;                              // Số pip để đặt SL/TP cách điểm hòa vốn
 input group "=== COLOR TEXT ===";
-input color CountdownColor = clrBlack;  // Màu sắc countdown time
+input color CountdownColor = clrBlack;            // Màu sắc countdown time
 
 // Global variables
 datetime CandleCloseTime;       // Biến kiểm tra giá chạy 1p một lần
