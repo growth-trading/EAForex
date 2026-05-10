@@ -16,10 +16,10 @@ echo ================================================
 echo.
 
 :: Chay file bot
-if exist forward_bot.py (
-    python forward_bot.py
+if exist ForwardMessage_Bot.py (
+    python ForwardMessage_Bot.py
 ) else (
-    echo [LOI] Khong tim thay file forward_bot.py trong thu muc nay.
+    echo [LOI] Khong tim thay file ForwardMessage_Bot.py trong thu muc nay.
 )
 
 echo.
