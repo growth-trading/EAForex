@@ -1174,14 +1174,3 @@ void OnTimer() {
     // GUI refresh every second
     UpdateGUI();
 }
-
-void OnTradeTransaction(const MqlTradeTransaction& trans,
-                        const MqlTradeRequest&     req,
-                        const MqlTradeResult&      res) {
-    // Cập nhật Day P/L ngay khi có lệnh đóng (không chờ timer 1 giây)
-    if(trans.type == TRADE_TRANSACTION_DEAL_ADD) {
-        UpdateDayProfit();
-        UpdateGUI();
-    }
-}
-//+------------------------------------------------------------------+
