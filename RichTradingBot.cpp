@@ -208,8 +208,6 @@ double   TrailSell = 0.0;
 // Pyramiding order counts per direction
 int      PyraCountBuy  = 0;
 int      PyraCountSell = 0;
-datetime PyraLastBuy   = 0;
-datetime PyraLastSell  = 0;
 
 // GUI prefix
 const string GUI = "RTB_";
@@ -502,8 +500,11 @@ int GetSignal() {
         case SIG_BB:        sig = SignalBB();        break;
         case SIG_SIMULATED: sig = SignalSimulated(); break;
     }
-    if(InpDirection == DIR_ONLY_BUY  && sig < 0) return 0;
-    if(InpDirection == DIR_ONLY_SELL && sig > 0) return 0;
+    // SIG_SIMULATED đã tự filter theo InpDirection — chỉ apply cho các strategy khác
+    if(InpSignalMode != SIG_SIMULATED) {
+        if(InpDirection == DIR_ONLY_BUY  && sig < 0) return 0;
+        if(InpDirection == DIR_ONLY_SELL && sig > 0) return 0;
+    }
     return sig;
 }
 
@@ -511,11 +512,13 @@ int GetSignal() {
 //| INITIAL ENTRY (OnTick)                                           |
 //+------------------------------------------------------------------+
 void TryOpenBuy() {
+    if(CountBuy() >= InpMaxBuy) return;
     if(CountBuy() > 0) return;   // đã có lệnh → DCA xử lý
     OpenOrder(ORDER_TYPE_BUY, InpLotSize, InpTP_Points, InpSL_Points);
 }
 
 void TryOpenSell() {
+    if(CountSell() >= InpMaxSell) return;
     if(CountSell() > 0) return;
     OpenOrder(ORDER_TYPE_SELL, InpLotSize, InpTP_Points, InpSL_Points);
 }
@@ -623,8 +626,8 @@ void CheckPyramiding(int posType) {
     double lot = NormLot(InpLotSize * InpPyraLotMult);
     int    ord = (posType == POSITION_TYPE_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
     if(OpenOrder(ord, lot, InpTP_Points, InpSL_Points)) {
-        if(posType == POSITION_TYPE_BUY) { PyraCountBuy++;  PyraLastBuy  = TimeCurrent(); }
-        else                             { PyraCountSell++; PyraLastSell = TimeCurrent(); }
+        if(posType == POSITION_TYPE_BUY) PyraCountBuy++;
+        else                             PyraCountSell++;
         Print("RTB: Pyramiding level ", pyraCount + 1);
     }
 }
@@ -886,15 +889,16 @@ void CheckExit() {
             int    pt  = (int)PositionGetInteger(POSITION_TYPE);
             double opn = PositionGetDouble(POSITION_PRICE_OPEN);
 
+            // Stealth Mode thay thế hoàn toàn server TP/SL — không phụ thuộc InpUseTakeProfit/SL
             if(pt == POSITION_TYPE_BUY) {
-                if(InpUseTakeProfit && InpTP_Points > 0 && bid >= opn + InpTP_Points * point)
+                if(InpTP_Points > 0 && bid >= opn + InpTP_Points * point)
                     { Trade.PositionClose(tk); continue; }
-                if(InpUseStopLoss && InpSL_Points > 0 && bid <= opn - InpSL_Points * point)
+                if(InpSL_Points > 0 && bid <= opn - InpSL_Points * point)
                     Trade.PositionClose(tk);
             } else {
-                if(InpUseTakeProfit && InpTP_Points > 0 && ask <= opn - InpTP_Points * point)
+                if(InpTP_Points > 0 && ask <= opn - InpTP_Points * point)
                     { Trade.PositionClose(tk); continue; }
-                if(InpUseStopLoss && InpSL_Points > 0 && ask >= opn + InpSL_Points * point)
+                if(InpSL_Points > 0 && ask >= opn + InpSL_Points * point)
                     Trade.PositionClose(tk);
             }
         }
@@ -979,13 +983,21 @@ void UpdateGUI() {
     double balance   = AccountInfoDouble(ACCOUNT_BALANCE);
     double equity    = AccountInfoDouble(ACCOUNT_EQUITY);
     double spread    = (double)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD);
-    double totalProfit = FloatProfit();
-    double buyProfit   = FloatProfit(POSITION_TYPE_BUY);
-    double sellProfit  = FloatProfit(POSITION_TYPE_SELL);
-    int    nBuy  = CountBuy();
-    int    nSell = CountSell();
-    double lotBuy  = TotalLot(POSITION_TYPE_BUY);
-    double lotSell = TotalLot(POSITION_TYPE_SELL);
+    double totalProfit = 0, buyProfit = 0, sellProfit = 0;
+    int    nBuy = 0, nSell = 0;
+    double lotBuy = 0, lotSell = 0;
+    for(int i = PositionsTotal()-1; i >= 0; i--) {
+        ulong tk = PositionGetTicket(i);
+        if(!PositionSelectByTicket(tk)) continue;
+        if(PositionGetInteger(POSITION_MAGIC) != (long)InpMagic) continue;
+        if(PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+        double p   = PositionGetDouble(POSITION_PROFIT) + PositionGetDouble(POSITION_SWAP);
+        double lot = PositionGetDouble(POSITION_VOLUME);
+        int    pt  = (int)PositionGetInteger(POSITION_TYPE);
+        totalProfit += p;
+        if(pt == POSITION_TYPE_BUY)  { buyProfit  += p; nBuy++;  lotBuy  += lot; }
+        else                         { sellProfit += p; nSell++; lotSell += lot; }
+    }
     double pnlPct  = (InitBalance > 0) ? totalProfit / InitBalance * 100.0 : 0;
     double ddPct   = (balance > 0 && equity < balance) ? (balance - equity) / balance * 100.0 : 0;
     if(ddPct > MaxDrawdownPct) MaxDrawdownPct = ddPct;
