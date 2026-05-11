@@ -344,8 +344,8 @@ double NormLot(double lot) {
 
 //+------------------------------------------------------------------+
 //| OPEN ORDER                                                       |
-//| isDCA=false : dùng flag InpUseTakeProfit / InpUseStopLoss        |
-//| isDCA=true  : luôn đặt TP/SL nếu giá trị > 0 (bỏ qua flag)      |
+//| isDCA=false : TP/SL server chỉ đặt khi InpUseTakeProfit/SL=true  |
+//| isDCA=true  : luôn đặt server TP/SL nếu giá trị > 0 (bỏ qua flag)|
 //+------------------------------------------------------------------+
 bool OpenOrder(int ordType, double lot, double tp_pts = 0, double sl_pts = 0, bool isDCA = false) {
     double ask   = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
@@ -354,10 +354,10 @@ bool OpenOrder(int ordType, double lot, double tp_pts = 0, double sl_pts = 0, bo
 
     double price, tp = 0, sl = 0;
 
-    // InpUseTakeProfit/InpUseStopLoss kiểm soát hiển thị trên chart cho TẤT CẢ lệnh
-    // DCA vẫn được đóng đúng TP/SL qua code trong CheckExit
-    bool applyTP = InpUseTakeProfit && tp_pts > 0;
-    bool applySL = InpUseStopLoss   && sl_pts > 0;
+    // Entry orders: InpUseTakeProfit/InpUseStopLoss quyết định có đặt TP/SL trên server không
+    // DCA orders: luôn đặt server TP/SL nếu giá trị > 0 (bỏ qua flag) để đảm bảo thoát chính xác
+    bool applyTP = isDCA ? (tp_pts > 0) : (InpUseTakeProfit && tp_pts > 0);
+    bool applySL = isDCA ? (sl_pts > 0) : (InpUseStopLoss   && sl_pts > 0);
 
     if(ordType == ORDER_TYPE_BUY) {
         price = ask;
@@ -512,13 +512,11 @@ int GetSignal() {
 //+------------------------------------------------------------------+
 void TryOpenBuy() {
     if(CountBuy() > 0) return;   // đã có lệnh → DCA xử lý
-    if(CountBuy() >= InpMaxBuy) return;
     OpenOrder(ORDER_TYPE_BUY, InpLotSize, InpTP_Points, InpSL_Points);
 }
 
 void TryOpenSell() {
     if(CountSell() > 0) return;
-    if(CountSell() >= InpMaxSell) return;
     OpenOrder(ORDER_TYPE_SELL, InpLotSize, InpTP_Points, InpSL_Points);
 }
 
@@ -1173,4 +1171,14 @@ void OnTimer() {
 
     // GUI refresh every second
     UpdateGUI();
+}
+
+void OnTradeTransaction(const MqlTradeTransaction& trans,
+                        const MqlTradeRequest&     req,
+                        const MqlTradeResult&      res) {
+    // Cập nhật Day P/L ngay khi có deal đóng, không chờ timer 1 giây
+    if(trans.type == TRADE_TRANSACTION_DEAL_ADD) {
+        UpdateDayProfit();
+        UpdateGUI();
+    }
 }
