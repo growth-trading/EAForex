@@ -95,7 +95,7 @@ Hỗ trợ **8 tầng DCA** tùy chỉnh độc lập. Khoảng cách tính từ
 
 ### Bảng cấu hình (mặc định)
 
-| Tầng | Chế độ | Hệ số Lot | Số lệnh tối đa(*) | Khoảng cách (points) | TP (points) | SL (points) |
+| Tầng | Chế độ | Hệ số Lot | Số lần mở(*) | Khoảng cách (points) | TP (points) | SL (points) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | 1 | Step | 1.5x | 2 | 1000 | 500 | 0 |
 | 2 | Step | 2.0x | 2 | 1500 | 500 | 0 |
@@ -106,7 +106,22 @@ Hỗ trợ **8 tầng DCA** tùy chỉnh độc lập. Khoảng cách tính từ
 | 7 | Step | 5.0x | 2 | 4000 | 500 | 0 |
 | 8 | Stop | 6.0x | 1 | 5000 | 500 | 0 |
 
-> **(*) Số lệnh tối đa** = tổng số lệnh Buy (hoặc Sell) được phép tồn tại đồng thời khi đang ở tầng đó. Ví dụ: T1 MaxOrd=2 nghĩa là lệnh gốc (1) + 1 DCA = tối đa 2 lệnh trước khi chuyển sang T2.
+> **(*) Số lần mở** = số lần tầng này được phép kích hoạt DCA tại khoảng cách của nó, trước khi chuyển sang tầng tiếp theo. Tầng được xác định theo **tổng số DCA đã mở cộng dồn** qua tất cả các tầng trước.
+
+**Ví dụ với cấu hình mặc định (MaxOrd = 2 cho T1–T7, MaxOrd = 1 cho T8):**
+
+| dcaCount (số DCA đã mở) | Tầng áp dụng | Khoảng cách | Hệ số Lot |
+| :--- | :--- | :--- | :--- |
+| 0, 1 | T1 | 1000pt | 1.5x |
+| 2, 3 | T2 | 1500pt | 2.0x |
+| 4, 5 | T3 | 2000pt | 2.5x |
+| 6, 7 | T4 | 2500pt | 3.0x |
+| 8, 9 | T5 | 3000pt | 3.5x |
+| 10, 11 | T6 | 3500pt | 4.0x |
+| 12, 13 | T7 | 4000pt | 5.0x |
+| 14 | T8 | 5000pt | 6.0x → Stop |
+
+Tổng tối đa: **1 lệnh gốc + 15 lệnh DCA = 16 lệnh** (bị giới hạn thêm bởi `InpMaxBuy` / `InpMaxSell`).
 
 ---
 
@@ -187,7 +202,7 @@ Panel tự động vẽ góc trên-trái màn hình, cập nhật mỗi giây.
 | **Direct** | **Hướng giao dịch đang sử dụng** (màu: xanh lá=Buy, đỏ=Sell, xanh dương=Both/Either) |
 | Balance | Số dư tài khoản hiện tại ($) |
 | Initial | Balance ban đầu khi khởi động EA ($) |
-| Day P/L | Tổng lợi nhuận đã chốt trong ngày ($) |
+| Day P/L | Tổng lợi nhuận đã chốt trong ngày ($) — tính cả lệnh đóng thủ công, cập nhật realtime qua `OnTradeTransaction` |
 | Float | Tổng lãi/lỗ trạng thái + phần trăm so với Balance ban đầu |
 | DD Now | Drawdown hiện tại (%) |
 | DD Max | Drawdown lớn nhất trong toàn bộ thời gian chạy (%) |
@@ -204,3 +219,7 @@ Panel tự động vẽ góc trên-trái màn hình, cập nhật mỗi giây.
 - **Cam** (`OrangeRed`): DD Now > 15%
 - **Vàng** (`Yellow`): Tên chiến lược tín hiệu
 - **Xanh dương** (`DodgerBlue`): Hướng Both / Either
+
+### Ghi chú Day P/L
+- Tính tổng `DEAL_PROFIT + DEAL_SWAP` của tất cả deal đóng hôm nay theo **symbol** (không lọc theo Magic Number).
+- Lý do bỏ filter Magic: khi đóng lệnh **thủ công** qua MT5 terminal, deal đóng có `DEAL_MAGIC = 0` — nếu lọc magic sẽ bỏ sót, khiến Day P/L không trừ khi cắt lệnh âm.
