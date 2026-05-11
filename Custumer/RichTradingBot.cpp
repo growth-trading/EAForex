@@ -475,10 +475,9 @@ int SignalBB() {
 }
 
 int SignalSimulated() {
-    // Immediate market order – direction determined by InpDirection
     if(InpDirection == DIR_ONLY_BUY)  return  1;
     if(InpDirection == DIR_ONLY_SELL) return -1;
-    return 1; // Default buy for Both/Either in simulated mode
+    return 2; // Both/Either: signal = 2 → mở cả BUY lẫn SELL
 }
 
 int GetSignal() {
@@ -498,22 +497,34 @@ int GetSignal() {
 //+------------------------------------------------------------------+
 //| INITIAL ENTRY (OnTick)                                           |
 //+------------------------------------------------------------------+
+void TryOpenBuy() {
+    if(CountBuy() > 0) return;   // đã có lệnh → DCA xử lý
+    if(CountBuy() >= InpMaxBuy) return;
+    OpenOrder(ORDER_TYPE_BUY, InpLotSize, InpTP_Points, InpSL_Points);
+}
+
+void TryOpenSell() {
+    if(CountSell() > 0) return;
+    if(CountSell() >= InpMaxSell) return;
+    OpenOrder(ORDER_TYPE_SELL, InpLotSize, InpTP_Points, InpSL_Points);
+}
+
 void CheckEntry() {
     if(TimeCurrent() - LastOrderTime < InpOrderDelay) return;
 
     int sig = GetSignal();
     if(sig == 0) return;
 
-    if(sig > 0) {
-        if(CountBuy() > 0) return; // DCA will handle scaling
-        if(CountBuy() >= InpMaxBuy) return;
-        OpenOrder(ORDER_TYPE_BUY, InpLotSize, InpTP_Points, InpSL_Points);
+    if(sig == 2) {
+        // Simulated Both/Either: mở BUY và SELL độc lập
+        // Mỗi hướng tự quản lý DCA/Trail/Trim riêng
+        TryOpenBuy();
+        TryOpenSell();
+        return;
     }
-    if(sig < 0) {
-        if(CountSell() > 0) return;
-        if(CountSell() >= InpMaxSell) return;
-        OpenOrder(ORDER_TYPE_SELL, InpLotSize, InpTP_Points, InpSL_Points);
-    }
+
+    if(sig > 0) TryOpenBuy();
+    if(sig < 0) TryOpenSell();
 }
 
 //+------------------------------------------------------------------+
@@ -936,6 +947,15 @@ void UpdateGUI() {
         case SIG_SIMULATED: sigName = "Simulated";      break;
     }
 
+    string dirName = "";
+    color  dirClr  = clrSilver;
+    switch(InpDirection) {
+        case DIR_BOTH:      dirName = "▲▼ Both";     dirClr = clrDodgerBlue; break;
+        case DIR_ONLY_BUY:  dirName = "▲  Buy Only"; dirClr = clrLimeGreen;  break;
+        case DIR_ONLY_SELL: dirName = "▼  Sell Only"; dirClr = clrTomato;    break;
+        case DIR_EITHER:    dirName = "▲▼ Either";   dirClr = clrDodgerBlue; break;
+    }
+
     MqlDateTime dt;
     TimeToStruct(TimeLocal(), dt);
     string tStr = StringFormat("%04d/%02d/%02d  %02d:%02d:%02d",
@@ -954,7 +974,7 @@ void UpdateGUI() {
         ObjectSetInteger(0, bg, OBJPROP_XDISTANCE, 5);
         ObjectSetInteger(0, bg, OBJPROP_YDISTANCE, 18);
         ObjectSetInteger(0, bg, OBJPROP_XSIZE,     248);
-        ObjectSetInteger(0, bg, OBJPROP_YSIZE,     365);
+        ObjectSetInteger(0, bg, OBJPROP_YSIZE,     381);
         ObjectSetInteger(0, bg, OBJPROP_BGCOLOR,   C'15,18,28');
         ObjectSetInteger(0, bg, OBJPROP_BORDER_TYPE, BORDER_FLAT);
         ObjectSetInteger(0, bg, OBJPROP_COLOR,     C'40,50,90');
@@ -968,6 +988,7 @@ void UpdateGUI() {
     Lbl("L0",   "────────────────────────",   x, y, C'40,50,90'  );     y += s-2;
     Lbl("Tim",  "Time   : " + tStr,           x, y, clrSilver     );    y += s;
     Lbl("Sig",  "Signal : " + sigName,        x, y, clrYellow     );    y += s;
+    Lbl("Dir",  "Direct : " + dirName,        x, y, dirClr        );    y += s;
     Lbl("L1",   "────────────────────────",   x, y, C'40,50,90'  );     y += s-2;
     Lbl("Bal",  StringFormat("Balance: $%.2f", balance),   x, y, clrSilver);  y += s;
     Lbl("Ini",  StringFormat("Initial: $%.2f", InitBalance),x, y, clrSilver); y += s;
