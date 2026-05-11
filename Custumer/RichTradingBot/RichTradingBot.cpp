@@ -344,39 +344,52 @@ double NormLot(double lot) {
 
 //+------------------------------------------------------------------+
 //| OPEN ORDER                                                       |
+//| isDCA=false : dùng flag InpUseTakeProfit / InpUseStopLoss        |
+//| isDCA=true  : luôn đặt TP/SL nếu giá trị > 0 (bỏ qua flag)      |
 //+------------------------------------------------------------------+
-bool OpenOrder(int ordType, double lot, double tp_pts = 0, double sl_pts = 0) {
+bool OpenOrder(int ordType, double lot, double tp_pts = 0, double sl_pts = 0, bool isDCA = false) {
     double ask   = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
     double bid   = SymbolInfoDouble(_Symbol, SYMBOL_BID);
     double point = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
 
     double price, tp = 0, sl = 0;
 
+    // InpUseTakeProfit/InpUseStopLoss kiểm soát hiển thị trên chart cho TẤT CẢ lệnh
+    // DCA vẫn được đóng đúng TP/SL qua code trong CheckExit
+    bool applyTP = InpUseTakeProfit && tp_pts > 0;
+    bool applySL = InpUseStopLoss   && sl_pts > 0;
+
     if(ordType == ORDER_TYPE_BUY) {
         price = ask;
-        if(InpUseTakeProfit && tp_pts > 0 && !InpStealthMode)
+        if(applyTP && !InpStealthMode)
             tp = NormalizeDouble(price + tp_pts * point, _Digits);
-        if(InpUseStopLoss && sl_pts > 0 && !InpStealthMode)
+        if(applySL && !InpStealthMode)
             sl = NormalizeDouble(price - sl_pts * point, _Digits);
     } else {
         price = bid;
-        if(InpUseTakeProfit && tp_pts > 0 && !InpStealthMode)
+        if(applyTP && !InpStealthMode)
             tp = NormalizeDouble(price - tp_pts * point, _Digits);
-        if(InpUseStopLoss && sl_pts > 0 && !InpStealthMode)
+        if(applySL && !InpStealthMode)
             sl = NormalizeDouble(price + sl_pts * point, _Digits);
     }
+
+    // Encode TP/SL points into comment so Stealth Mode can read them per-order
+    string comment = isDCA
+        ? StringFormat("RTB|%.0f|%.0f", tp_pts, sl_pts)
+        : "RTB|0|0";
 
     lot = NormLot(lot);
     bool ok;
     if(ordType == ORDER_TYPE_BUY)
-        ok = Trade.Buy(lot, _Symbol, price, sl, tp, "RTB");
+        ok = Trade.Buy(lot, _Symbol, price, sl, tp, comment);
     else
-        ok = Trade.Sell(lot, _Symbol, price, sl, tp, "RTB");
+        ok = Trade.Sell(lot, _Symbol, price, sl, tp, comment);
 
     if(ok) {
         LastOrderTime = TimeCurrent();
         Print("RTB: Open ", (ordType == ORDER_TYPE_BUY ? "BUY" : "SELL"),
-              " lot=", lot, " tp=", tp, " sl=", sl);
+              " lot=", lot, " tp=", tp, " sl=", sl,
+              isDCA ? " [DCA]" : " [Entry]");
     } else {
         Print("RTB: OpenOrder FAILED type=", ordType, " err=", GetLastError());
     }
@@ -574,7 +587,7 @@ void CheckDCA(int posType) {
     double lot = NormLot(InpLotSize * DCA_Mult[lvl]);
     int    ord = (posType == POSITION_TYPE_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
     Print("RTB: DCA level ", lvl+1, " triggered. count=", count);
-    OpenOrder(ord, lot, DCA_TP[lvl], DCA_SL[lvl]);
+    OpenOrder(ord, lot, DCA_TP[lvl], DCA_SL[lvl], true);
 }
 
 //+------------------------------------------------------------------+
@@ -818,7 +831,42 @@ void CheckExit() {
         }
     }
 
-    // 2. Stealth TP/SL management (when stealth mode on, check manually)
+    // 2a. DCA TP/SL — luôn chạy (không cần Stealth Mode)
+    //     Đóng lệnh DCA đúng TP/SL của từng tầng dù Use_TP = false
+    {
+        double ask   = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+        double bid   = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+        double point = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+
+        for(int i = PositionsTotal()-1; i >= 0; i--) {
+            ulong tk = PositionGetTicket(i);
+            if(!PositionSelectByTicket(tk)) continue;
+            if(PositionGetInteger(POSITION_MAGIC) != (long)InpMagic) continue;
+            if(PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+
+            string cmt = PositionGetString(POSITION_COMMENT);
+            // Chỉ xử lý lệnh DCA (comment dạng "RTB|tp|sl" với tp > 0)
+            if(StringFind(cmt, "RTB|") != 0) continue;
+            string parts[];
+            if(StringSplit(cmt, '|', parts) < 3) continue;
+            double useTP = StringToDouble(parts[1]);
+            double useSL = StringToDouble(parts[2]);
+            if(useTP == 0 && useSL == 0) continue; // lệnh gốc, bỏ qua
+
+            int    pt  = (int)PositionGetInteger(POSITION_TYPE);
+            double opn = PositionGetDouble(POSITION_PRICE_OPEN);
+
+            if(pt == POSITION_TYPE_BUY) {
+                if(useTP > 0 && bid >= opn + useTP * point) { Trade.PositionClose(tk); continue; }
+                if(useSL > 0 && bid <= opn - useSL * point)   Trade.PositionClose(tk);
+            } else {
+                if(useTP > 0 && ask <= opn - useTP * point) { Trade.PositionClose(tk); continue; }
+                if(useSL > 0 && ask >= opn + useSL * point)   Trade.PositionClose(tk);
+            }
+        }
+    }
+
+    // 2b. Stealth TP/SL — lệnh gốc, chỉ chạy khi Stealth Mode bật
     if(InpStealthMode) {
         double ask   = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
         double bid   = SymbolInfoDouble(_Symbol, SYMBOL_BID);
@@ -830,18 +878,22 @@ void CheckExit() {
             if(PositionGetInteger(POSITION_MAGIC) != (long)InpMagic) continue;
             if(PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
 
+            // Chỉ xử lý lệnh gốc (comment "RTB|0|0")
+            string cmt = PositionGetString(POSITION_COMMENT);
+            if(cmt != "RTB|0|0") continue;
+
             int    pt  = (int)PositionGetInteger(POSITION_TYPE);
             double opn = PositionGetDouble(POSITION_PRICE_OPEN);
 
             if(pt == POSITION_TYPE_BUY) {
                 if(InpUseTakeProfit && InpTP_Points > 0 && bid >= opn + InpTP_Points * point)
-                    Trade.PositionClose(tk);
-                if(InpUseStopLoss  && InpSL_Points > 0 && bid <= opn - InpSL_Points * point)
+                    { Trade.PositionClose(tk); continue; }
+                if(InpUseStopLoss && InpSL_Points > 0 && bid <= opn - InpSL_Points * point)
                     Trade.PositionClose(tk);
             } else {
                 if(InpUseTakeProfit && InpTP_Points > 0 && ask <= opn - InpTP_Points * point)
-                    Trade.PositionClose(tk);
-                if(InpUseStopLoss  && InpSL_Points > 0 && ask >= opn + InpSL_Points * point)
+                    { Trade.PositionClose(tk); continue; }
+                if(InpUseStopLoss && InpSL_Points > 0 && ask >= opn + InpSL_Points * point)
                     Trade.PositionClose(tk);
             }
         }
