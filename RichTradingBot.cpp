@@ -139,13 +139,74 @@ input  double  InpDCA8TP   = 500.0; // DCA T8: TP (points)
 input  double  InpDCA8SL   = 0.0; // DCA T8: SL (points, 0=tắt)
 
 //+------------------------------------------------------------------+
-//| INPUT: PYRAMIDING                                                |
+//| INPUT: PYRAMIDING (NHỒI DƯƠNG)                                   |
 //+------------------------------------------------------------------+
 input group         "══════ NHỒI DƯƠNG (PYRAMIDING) ══════"; //
 input  bool    InpPyraEnable    = false;  // Bật Nhồi Dương
-input  double  InpPyraDist      = 500.0;  // Khoảng cách nhồi (points)
-input  int     InpPyraMaxLevels = 8;      // Số tầng nhồi tối đa
-input  double  InpPyraLotMult   = 1.0;    // Hệ số Lot nhồi
+
+input group         "══════ PYRA - TẦNG 1 ══════"; //
+input  ENUM_DCA_MODE InpPyra1Mode = DCA_STEP; // PYRA T1: Chế độ
+input  double  InpPyra1Mult = 1.0;    // PYRA T1: Hệ số Lot
+input  int     InpPyra1Max  = 2;      // PYRA T1: Max lệnh tổng tại tầng này
+input  double  InpPyra1Dist = 500.0;  // PYRA T1: Khoảng cách (points)
+input  double  InpPyra1TP   = 3000.0; // PYRA T1: TP (points)
+input  double  InpPyra1SL   = 0.0;    // PYRA T1: SL (points, 0=tắt)
+
+input group         "══════ PYRA - TẦNG 2 ══════"; //
+input  ENUM_DCA_MODE InpPyra2Mode = DCA_STEP;
+input  double  InpPyra2Mult = 1.0;    // PYRA T2: Hệ số Lot
+input  int     InpPyra2Max  = 2;      // PYRA T2: Max lệnh tổng tại tầng này
+input  double  InpPyra2Dist = 500.0;  // PYRA T2: Khoảng cách (points)
+input  double  InpPyra2TP   = 3000.0; // PYRA T2: TP (points)
+input  double  InpPyra2SL   = 0.0;    // PYRA T2: SL (points, 0=tắt)
+
+input group         "══════ PYRA - TẦNG 3 ══════"; //
+input  ENUM_DCA_MODE InpPyra3Mode = DCA_STEP;
+input  double  InpPyra3Mult = 1.0;    // PYRA T3: Hệ số Lot
+input  int     InpPyra3Max  = 2;      // PYRA T3: Max lệnh tổng tại tầng này
+input  double  InpPyra3Dist = 500.0;  // PYRA T3: Khoảng cách (points)
+input  double  InpPyra3TP   = 3000.0; // PYRA T3: TP (points)
+input  double  InpPyra3SL   = 0.0;    // PYRA T3: SL (points, 0=tắt)
+
+input group         "══════ PYRA - TẦNG 4 ══════"; //
+input  ENUM_DCA_MODE InpPyra4Mode = DCA_STEP;
+input  double  InpPyra4Mult = 1.0;    // PYRA T4: Hệ số Lot
+input  int     InpPyra4Max  = 2;      // PYRA T4: Max lệnh tổng tại tầng này
+input  double  InpPyra4Dist = 500.0;  // PYRA T4: Khoảng cách (points)
+input  double  InpPyra4TP   = 3000.0; // PYRA T4: TP (points)
+input  double  InpPyra4SL   = 0.0;    // PYRA T4: SL (points, 0=tắt)
+
+input group         "══════ PYRA - TẦNG 5 ══════"; //
+input  ENUM_DCA_MODE InpPyra5Mode = DCA_STEP;
+input  double  InpPyra5Mult = 1.0;    // PYRA T5: Hệ số Lot
+input  int     InpPyra5Max  = 2;      // PYRA T5: Max lệnh tổng tại tầng này
+input  double  InpPyra5Dist = 500.0;  // PYRA T5: Khoảng cách (points)
+input  double  InpPyra5TP   = 3000.0; // PYRA T5: TP (points)
+input  double  InpPyra5SL   = 0.0;    // PYRA T5: SL (points, 0=tắt)
+
+input group         "══════ PYRA - TẦNG 6 ══════"; //
+input  ENUM_DCA_MODE InpPyra6Mode = DCA_STEP;
+input  double  InpPyra6Mult = 1.0;    // PYRA T6: Hệ số Lot
+input  int     InpPyra6Max  = 2;      // PYRA T6: Max lệnh tổng tại tầng này
+input  double  InpPyra6Dist = 500.0;  // PYRA T6: Khoảng cách (points)
+input  double  InpPyra6TP   = 3000.0; // PYRA T6: TP (points)
+input  double  InpPyra6SL   = 0.0;    // PYRA T6: SL (points, 0=tắt)
+
+input group         "══════ PYRA - TẦNG 7 ══════"; //
+input  ENUM_DCA_MODE InpPyra7Mode = DCA_STEP;
+input  double  InpPyra7Mult = 1.0;    // PYRA T7: Hệ số Lot
+input  int     InpPyra7Max  = 2;      // PYRA T7: Max lệnh tổng tại tầng này
+input  double  InpPyra7Dist = 500.0;  // PYRA T7: Khoảng cách (points)
+input  double  InpPyra7TP   = 3000.0; // PYRA T7: TP (points)
+input  double  InpPyra7SL   = 0.0;    // PYRA T7: SL (points, 0=tắt)
+
+input group         "══════ PYRA - TẦNG 8 ══════"; //
+input  ENUM_DCA_MODE InpPyra8Mode = DCA_STOP;
+input  double  InpPyra8Mult = 1.0;    // PYRA T8: Hệ số Lot
+input  int     InpPyra8Max  = 1;      // PYRA T8: Max lệnh tổng tại tầng này
+input  double  InpPyra8Dist = 500.0;  // PYRA T8: Khoảng cách (points)
+input  double  InpPyra8TP   = 3000.0; // PYRA T8: TP (points)
+input  double  InpPyra8SL   = 0.0;    // PYRA T8: SL (points, 0=tắt)
 
 //+------------------------------------------------------------------+
 //| INPUT: ORDER TRIMMING                                            |
@@ -155,6 +216,8 @@ input  bool    InpTrimEnable     = false;  // Bật Tỉa Lệnh
 input  bool    InpTrimHedge      = false;  // Tỉa chéo (Hedging mode)
 input  int     InpTrimTrigger    = 5;      // Kích hoạt khi số lệnh >= X
 input  double  InpTrimTarget     = 10.0;   // Mục tiêu lợi nhuận sau tỉa ($)
+input  int     InpTrimMaxLoss    = 1;      // Số lệnh âm tối đa cần tỉa mỗi lần
+input  int     InpTrimMaxWin     = 1;      // Số lệnh dương tối đa dùng để tỉa (Hedge)
 input  bool    InpPartialTrim    = false;  // Bật Tỉa Một Phần
 input  double  InpPartialTrimDD  = 20.0;   // Kích hoạt khi DD% >
 input  bool    InpTrimByDayProfit= false;  // Tỉa theo Lãi Ngày
@@ -195,6 +258,14 @@ double        DCA_Dist[8];
 double        DCA_TP[8];
 double        DCA_SL[8];
 
+// Pyramiding config arrays (index 0-7 = level 1-8)
+ENUM_DCA_MODE PYRA_Mode[8];
+double        PYRA_Mult[8];
+int           PYRA_MaxOrd[8];
+double        PYRA_Dist[8];
+double        PYRA_TP[8];
+double        PYRA_SL[8];
+
 datetime LastOrderTime  = 0;
 double   InitBalance    = 0.0;
 double   MaxDrawdownPct = 0.0;
@@ -204,10 +275,6 @@ int      LastDay        = -1;
 // Basket trail levels
 double   TrailBuy  = 0.0;
 double   TrailSell = 0.0;
-
-// Pyramiding order counts per direction
-int      PyraCountBuy  = 0;
-int      PyraCountSell = 0;
 
 // GUI prefix
 const string GUI = "RTB_";
@@ -603,8 +670,20 @@ void CheckPyramiding(int posType) {
     int count = CountPos(posType);
     if(count == 0) return;
 
-    int pyraCount = (posType == POSITION_TYPE_BUY) ? PyraCountBuy : PyraCountSell;
-    if(pyraCount >= InpPyraMaxLevels) return;
+    int pyraCount = count - 1; // số lệnh pyramiding đã mở (không tính lệnh gốc)
+
+    int lvl = -1;
+    int cumulative = 0;
+    for(int i = 0; i < 8; i++) {
+        int nextCum = cumulative + PYRA_MaxOrd[i];
+        if(pyraCount < nextCum) { lvl = i; break; }
+        cumulative = nextCum;
+    }
+    if(lvl < 0) return;
+    if(PYRA_Mode[lvl] == DCA_STOP) return;
+
+    int maxOrds = (posType == POSITION_TYPE_BUY) ? InpMaxBuy : InpMaxSell;
+    if(count >= maxOrds) return;
 
     double lastPrice = LastOpenPrice(posType);
     if(lastPrice == 0) return;
@@ -612,24 +691,28 @@ void CheckPyramiding(int posType) {
     double ask   = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
     double bid   = SymbolInfoDouble(_Symbol, SYMBOL_BID);
     double point = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
-    double dist  = InpPyraDist * point;
+    double dist  = PYRA_Dist[lvl] * point;
 
     bool inProfit = false;
     if(posType == POSITION_TYPE_BUY)
-        inProfit = (bid - lastPrice) >= dist;  // Price moved up by dist
+        inProfit = (bid - lastPrice) >= dist;
     else
-        inProfit = (lastPrice - ask) >= dist;  // Price moved down by dist
+        inProfit = (lastPrice - ask) >= dist;
 
     if(!inProfit) return;
+
+    if(PYRA_Mode[lvl] == DCA_STEP_TF) {
+        int sig = GetSignal();
+        if(posType == POSITION_TYPE_BUY  && sig != 1)  return;
+        if(posType == POSITION_TYPE_SELL && sig != -1) return;
+    }
+
     if(TimeCurrent() - LastOrderTime < InpOrderDelay) return;
 
-    double lot = NormLot(InpLotSize * InpPyraLotMult);
+    double lot = NormLot(InpLotSize * PYRA_Mult[lvl]);
     int    ord = (posType == POSITION_TYPE_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
-    if(OpenOrder(ord, lot, InpTP_Points, InpSL_Points)) {
-        if(posType == POSITION_TYPE_BUY) PyraCountBuy++;
-        else                             PyraCountSell++;
-        Print("RTB: Pyramiding level ", pyraCount + 1);
-    }
+    Print("RTB: Pyramiding level ", lvl+1, " triggered. pyraCount=", pyraCount);
+    OpenOrder(ord, lot, PYRA_TP[lvl], PYRA_SL[lvl], true);
 }
 
 //+------------------------------------------------------------------+
@@ -646,10 +729,15 @@ void CheckTrimming() {
     if(InpPartialTrim && balance > 0) {
         double ddPct = (balance - equity) / balance * 100.0;
         if(ddPct > InpPartialTrimDD) {
-            ulong worstTk = WorstTicket();
-            if(worstTk > 0) {
-                Print("RTB: Partial Trim DD=", ddPct, "%");
-                Trade.PositionClose(worstTk);
+            int closed = 0;
+            for(int n = 0; n < InpTrimMaxLoss; n++) {
+                ulong tk = WorstTicket();
+                if(tk == 0) break;
+                Trade.PositionClose(tk);
+                closed++;
+            }
+            if(closed > 0) {
+                Print("RTB: Partial Trim DD=", ddPct, "% closed=", closed);
                 return;
             }
         }
@@ -657,50 +745,62 @@ void CheckTrimming() {
 
     // Trim by day profit: if today's closed profit > |worst floating loss|
     if(InpTrimByDayProfit) {
-        ulong worstTk = WorstTicket();
-        if(worstTk > 0 && PositionSelectByTicket(worstTk)) {
+        int closed = 0;
+        for(int n = 0; n < InpTrimMaxLoss; n++) {
+            ulong worstTk = WorstTicket();
+            if(worstTk == 0 || !PositionSelectByTicket(worstTk)) break;
             double worstP = PositionGetDouble(POSITION_PROFIT);
             if(DayProfit > MathAbs(worstP) && DayProfit > 0) {
-                Print("RTB: Trim by DayProfit=", DayProfit, " worst=", worstP);
                 Trade.PositionClose(worstTk);
-                return;
-            }
+                closed++;
+            } else break;
+        }
+        if(closed > 0) {
+            Print("RTB: Trim by DayProfit=", DayProfit, " closed=", closed);
+            return;
         }
     }
 
-    // Hedging trim: close profitable opposite position to cover worst
+    // Hedging trim: close pairs of best+worst up to min(MaxWin, MaxLoss)
     if(InpTrimHedge) {
-        ulong worstTk = WorstTicket();
-        ulong bestTk  = BestTicket();
-        if(worstTk > 0 && bestTk > 0 && worstTk != bestTk) {
-            if(PositionSelectByTicket(bestTk)) {
-                double bestP  = PositionGetDouble(POSITION_PROFIT);
-                if(PositionSelectByTicket(worstTk)) {
-                    double worstP = PositionGetDouble(POSITION_PROFIT);
-                    double net = bestP + worstP;
-                    if(net >= InpTrimTarget) {
-                        Trade.PositionClose(worstTk);
-                        Trade.PositionClose(bestTk);
-                        Print("RTB: Hedge trim, net=", net);
-                        return;
-                    }
-                }
-            }
+        int pairs  = MathMin(InpTrimMaxLoss, InpTrimMaxWin);
+        int closed = 0;
+        for(int n = 0; n < pairs; n++) {
+            ulong worstTk = WorstTicket();
+            ulong bestTk  = BestTicket();
+            if(worstTk == 0 || bestTk == 0 || worstTk == bestTk) break;
+            if(!PositionSelectByTicket(bestTk))  break;
+            double bestP = PositionGetDouble(POSITION_PROFIT);
+            if(!PositionSelectByTicket(worstTk)) break;
+            double worstP = PositionGetDouble(POSITION_PROFIT);
+            if(bestP + worstP >= InpTrimTarget) {
+                Trade.PositionClose(worstTk);
+                Trade.PositionClose(bestTk);
+                closed++;
+            } else break;
+        }
+        if(closed > 0) {
+            Print("RTB: Hedge trim, pairs=", closed);
+            return;
         }
     }
 
     // Same-direction trim: use aggregate floating profit vs target
-    double totalProfit = FloatProfit();
-    if(InpTrimTarget > 0 && totalProfit >= InpTrimTarget) {
-        ulong worstTk = WorstTicket();
-        if(worstTk > 0 && PositionSelectByTicket(worstTk)) {
+    if(InpTrimTarget > 0) {
+        int closed = 0;
+        for(int n = 0; n < InpTrimMaxLoss; n++) {
+            double totalProfit = FloatProfit();
+            if(totalProfit < InpTrimTarget) break;
+            ulong worstTk = WorstTicket();
+            if(worstTk == 0 || !PositionSelectByTicket(worstTk)) break;
             double worstP = PositionGetDouble(POSITION_PROFIT);
-            // Only close worst if remaining positions still meet target
             if((totalProfit + worstP) >= InpTrimTarget) {
-                Print("RTB: Trim target met, closing worst=", worstP);
                 Trade.PositionClose(worstTk);
-            }
+                closed++;
+            } else break;
         }
+        if(closed > 0)
+            Print("RTB: Trim target met, closed=", closed);
     }
 }
 
@@ -1106,6 +1206,32 @@ void InitDCA() {
     DCA_Dist[7]=InpDCA8Dist; DCA_TP[7]=InpDCA8TP;     DCA_SL[7]=InpDCA8SL;
 }
 
+void InitPyra() {
+    PYRA_Mode[0]=InpPyra1Mode; PYRA_Mult[0]=InpPyra1Mult; PYRA_MaxOrd[0]=InpPyra1Max;
+    PYRA_Dist[0]=InpPyra1Dist; PYRA_TP[0]=InpPyra1TP;     PYRA_SL[0]=InpPyra1SL;
+
+    PYRA_Mode[1]=InpPyra2Mode; PYRA_Mult[1]=InpPyra2Mult; PYRA_MaxOrd[1]=InpPyra2Max;
+    PYRA_Dist[1]=InpPyra2Dist; PYRA_TP[1]=InpPyra2TP;     PYRA_SL[1]=InpPyra2SL;
+
+    PYRA_Mode[2]=InpPyra3Mode; PYRA_Mult[2]=InpPyra3Mult; PYRA_MaxOrd[2]=InpPyra3Max;
+    PYRA_Dist[2]=InpPyra3Dist; PYRA_TP[2]=InpPyra3TP;     PYRA_SL[2]=InpPyra3SL;
+
+    PYRA_Mode[3]=InpPyra4Mode; PYRA_Mult[3]=InpPyra4Mult; PYRA_MaxOrd[3]=InpPyra4Max;
+    PYRA_Dist[3]=InpPyra4Dist; PYRA_TP[3]=InpPyra4TP;     PYRA_SL[3]=InpPyra4SL;
+
+    PYRA_Mode[4]=InpPyra5Mode; PYRA_Mult[4]=InpPyra5Mult; PYRA_MaxOrd[4]=InpPyra5Max;
+    PYRA_Dist[4]=InpPyra5Dist; PYRA_TP[4]=InpPyra5TP;     PYRA_SL[4]=InpPyra5SL;
+
+    PYRA_Mode[5]=InpPyra6Mode; PYRA_Mult[5]=InpPyra6Mult; PYRA_MaxOrd[5]=InpPyra6Max;
+    PYRA_Dist[5]=InpPyra6Dist; PYRA_TP[5]=InpPyra6TP;     PYRA_SL[5]=InpPyra6SL;
+
+    PYRA_Mode[6]=InpPyra7Mode; PYRA_Mult[6]=InpPyra7Mult; PYRA_MaxOrd[6]=InpPyra7Max;
+    PYRA_Dist[6]=InpPyra7Dist; PYRA_TP[6]=InpPyra7TP;     PYRA_SL[6]=InpPyra7SL;
+
+    PYRA_Mode[7]=InpPyra8Mode; PYRA_Mult[7]=InpPyra8Mult; PYRA_MaxOrd[7]=InpPyra8Max;
+    PYRA_Dist[7]=InpPyra8Dist; PYRA_TP[7]=InpPyra8TP;     PYRA_SL[7]=InpPyra8SL;
+}
+
 //+------------------------------------------------------------------+
 //| EVENT HANDLERS                                                   |
 //+------------------------------------------------------------------+
@@ -1115,6 +1241,7 @@ int OnInit() {
     Trade.SetTypeFilling(ORDER_FILLING_RETURN);
 
     InitDCA();
+    InitPyra();
 
     // Create indicator handles
     hEMAFast = iMA(_Symbol, InpSignalTF, InpEMAFast, 0, MODE_EMA, PRICE_CLOSE);
@@ -1132,8 +1259,6 @@ int OnInit() {
     MaxDrawdownPct = 0;
     TrailBuy       = 0;
     TrailSell      = 0;
-    PyraCountBuy   = 0;
-    PyraCountSell  = 0;
     LastDay        = -1;
 
     EventSetTimer(1);
@@ -1160,9 +1285,8 @@ void OnTick() {
 void OnTimer() {
     UpdateDayProfit();
 
-    // Reset pyramiding counters when positions are closed
-    if(CountBuy()  == 0) { PyraCountBuy  = 0; TrailBuy  = 0; }
-    if(CountSell() == 0) { PyraCountSell = 0; TrailSell = 0; }
+    if(CountBuy()  == 0) TrailBuy  = 0;
+    if(CountSell() == 0) TrailSell = 0;
 
     // Exit checks (basket close conditions)
     if(!InpStealthMode) CheckExit();
