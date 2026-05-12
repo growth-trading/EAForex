@@ -299,6 +299,20 @@ int CountBuy()  { return CountPos(POSITION_TYPE_BUY);  }
 int CountSell() { return CountPos(POSITION_TYPE_SELL); }
 int CountAll()  { return CountBuy() + CountSell(); }
 
+// Đếm pyramiding orders theo comment prefix "RTP|" — restart-safe, không lẫn với DCA
+int CountPyra(int posType) {
+    int n = 0;
+    for(int i = PositionsTotal()-1; i >= 0; i--) {
+        ulong tk = PositionGetTicket(i);
+        if(!PositionSelectByTicket(tk)) continue;
+        if(PositionGetInteger(POSITION_MAGIC) != (long)InpMagic) continue;
+        if(PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+        if((int)PositionGetInteger(POSITION_TYPE) != posType) continue;
+        if(StringFind(PositionGetString(POSITION_COMMENT), "RTP|") == 0) n++;
+    }
+    return n;
+}
+
 double FloatProfit(int posType = -1) {
     double p = 0;
     for(int i = PositionsTotal()-1; i >= 0; i--) {
@@ -412,17 +426,20 @@ double NormLot(double lot) {
 //| isDCA=false : TP/SL server chỉ đặt khi InpUseTakeProfit/SL=true  |
 //| isDCA=true  : luôn đặt server TP/SL nếu giá trị > 0 (bỏ qua flag)|
 //+------------------------------------------------------------------+
-bool OpenOrder(int ordType, double lot, double tp_pts = 0, double sl_pts = 0, bool isDCA = false) {
+// isDCA=true  : luôn đặt server TP/SL nếu > 0, comment "RTB|tp|sl"
+// isPyra=true : luôn đặt server TP/SL nếu > 0, comment "RTP|tp|sl" (phân biệt với DCA)
+// cả hai false: theo InpUseTakeProfit/SL, comment "RTB|0|0"
+bool OpenOrder(int ordType, double lot, double tp_pts = 0, double sl_pts = 0,
+               bool isDCA = false, bool isPyra = false) {
     double ask   = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
     double bid   = SymbolInfoDouble(_Symbol, SYMBOL_BID);
     double point = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
 
     double price, tp = 0, sl = 0;
 
-    // Entry orders: InpUseTakeProfit/InpUseStopLoss quyết định có đặt TP/SL trên server không
-    // DCA orders: luôn đặt server TP/SL nếu giá trị > 0 (bỏ qua flag) để đảm bảo thoát chính xác
-    bool applyTP = isDCA ? (tp_pts > 0) : (InpUseTakeProfit && tp_pts > 0);
-    bool applySL = isDCA ? (sl_pts > 0) : (InpUseStopLoss   && sl_pts > 0);
+    bool autoExit = (isDCA || isPyra);
+    bool applyTP  = autoExit ? (tp_pts > 0) : (InpUseTakeProfit && tp_pts > 0);
+    bool applySL  = autoExit ? (sl_pts > 0) : (InpUseStopLoss   && sl_pts > 0);
 
     if(ordType == ORDER_TYPE_BUY) {
         price = ask;
@@ -438,10 +455,10 @@ bool OpenOrder(int ordType, double lot, double tp_pts = 0, double sl_pts = 0, bo
             sl = NormalizeDouble(price + sl_pts * point, _Digits);
     }
 
-    // Encode TP/SL points into comment so Stealth Mode can read them per-order
-    string comment = isDCA
-        ? StringFormat("RTB|%.0f|%.0f", tp_pts, sl_pts)
-        : "RTB|0|0";
+    string comment;
+    if(isPyra)     comment = StringFormat("RTP|%.0f|%.0f", tp_pts, sl_pts);
+    else if(isDCA) comment = StringFormat("RTB|%.0f|%.0f", tp_pts, sl_pts);
+    else           comment = "RTB|0|0";
 
     lot = NormLot(lot);
     bool ok;
@@ -452,9 +469,9 @@ bool OpenOrder(int ordType, double lot, double tp_pts = 0, double sl_pts = 0, bo
 
     if(ok) {
         LastOrderTime = TimeCurrent();
+        string tag = isPyra ? " [PYRA]" : (isDCA ? " [DCA]" : " [Entry]");
         Print("RTB: Open ", (ordType == ORDER_TYPE_BUY ? "BUY" : "SELL"),
-              " lot=", lot, " tp=", tp, " sl=", sl,
-              isDCA ? " [DCA]" : " [Entry]");
+              " lot=", lot, " tp=", tp, " sl=", sl, tag);
     } else {
         Print("RTB: OpenOrder FAILED type=", ordType, " err=", GetLastError());
     }
@@ -670,7 +687,8 @@ void CheckPyramiding(int posType) {
     int count = CountPos(posType);
     if(count == 0) return;
 
-    int pyraCount = count - 1; // số lệnh pyramiding đã mở (không tính lệnh gốc)
+    // Đọc từ broker qua comment "RTP|" — restart-safe, không lẫn với DCA orders
+    int pyraCount = CountPyra(posType);
 
     int lvl = -1;
     int cumulative = 0;
@@ -711,8 +729,15 @@ void CheckPyramiding(int posType) {
 
     double lot = NormLot(InpLotSize * PYRA_Mult[lvl]);
     int    ord = (posType == POSITION_TYPE_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+
+    // Khi PYRA_TP=0 và PYRA_SL=0: fallback về isPyra=false, dùng InpUseTakeProfit + InpTP_Points
+    // như lệnh gốc (comment "RTB|0|0", section 2b xử lý Stealth)
+    bool   hasTierExit = (PYRA_TP[lvl] > 0 || PYRA_SL[lvl] > 0);
+    double openTP      = hasTierExit ? PYRA_TP[lvl] : InpTP_Points;
+    double openSL      = hasTierExit ? PYRA_SL[lvl] : InpSL_Points;
+
     Print("RTB: Pyramiding level ", lvl+1, " triggered. pyraCount=", pyraCount);
-    OpenOrder(ord, lot, PYRA_TP[lvl], PYRA_SL[lvl], true);
+    OpenOrder(ord, lot, openTP, openSL, false, hasTierExit);
 }
 
 //+------------------------------------------------------------------+
@@ -731,6 +756,7 @@ void CheckTrimming() {
         if(ddPct > InpPartialTrimDD) {
             int closed = 0;
             for(int n = 0; n < InpTrimMaxLoss; n++) {
+                if(CountAll() < InpTrimTrigger) break;
                 ulong tk = WorstTicket();
                 if(tk == 0) break;
                 Trade.PositionClose(tk);
@@ -949,13 +975,15 @@ void CheckExit() {
             if(PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
 
             string cmt = PositionGetString(POSITION_COMMENT);
-            // Chỉ xử lý lệnh DCA (comment dạng "RTB|tp|sl" với tp > 0)
-            if(StringFind(cmt, "RTB|") != 0) continue;
+            // Xử lý DCA ("RTB|tp|sl") và Pyramiding ("RTP|tp|sl") — bỏ qua "RTB|0|0" (lệnh gốc)
+            bool isDCAcmt  = (StringFind(cmt, "RTB|") == 0);
+            bool isPyracmt = (StringFind(cmt, "RTP|") == 0);
+            if(!isDCAcmt && !isPyracmt) continue;
             string parts[];
             if(StringSplit(cmt, '|', parts) < 3) continue;
             double useTP = StringToDouble(parts[1]);
             double useSL = StringToDouble(parts[2]);
-            if(useTP == 0 && useSL == 0) continue; // lệnh gốc, bỏ qua
+            if(useTP == 0 && useSL == 0) continue; // lệnh gốc "RTB|0|0" hoặc pyra fallback, bỏ qua
 
             int    pt  = (int)PositionGetInteger(POSITION_TYPE);
             double opn = PositionGetDouble(POSITION_PRICE_OPEN);
