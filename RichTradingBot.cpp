@@ -74,8 +74,12 @@ input  int     InpMaxSell  = 10;   // Số lệnh Sell tối đa
 //+------------------------------------------------------------------+
 //| INPUT: DCA (8 LEVELS)                                            |
 //+------------------------------------------------------------------+
+input group         "══════ DCA - CÀI ĐẶT CHUNG ══════"; //
+input  ENUM_DCA_MODE InpDCAMode     = DCA_STEP; // DCA: Chế độ (áp dụng cho tất cả tầng)
+input  bool          InpDCABuyEnable  = true;   // DCA: Bật DCA chiều Buy
+input  bool          InpDCASellEnable = true;   // DCA: Bật DCA chiều Sell
+
 input group         "══════ DCA - TẦNG 1 ══════"; //
-input  ENUM_DCA_MODE InpDCA1Mode = DCA_STEP; // DCA T1: Chế độ
 input  double  InpDCA1Mult = 1.5;    // DCA T1: Hệ số Lot
 input  int     InpDCA1Max  = 2;      // DCA T1: Max lệnh tổng tại tầng này
 input  double  InpDCA1Dist = 1000.0; // DCA T1: Khoảng cách (points)
@@ -83,7 +87,6 @@ input  double  InpDCA1TP   = 500.0;  // DCA T1: TP (points)
 input  double  InpDCA1SL   = 0.0;    // DCA T1: SL (points, 0=tắt)
 
 input group         "══════ DCA - TẦNG 2 ══════"; //
-input  ENUM_DCA_MODE InpDCA2Mode = DCA_STEP;
 input  double  InpDCA2Mult = 2.0;   // DCA T2: Hệ số Lot
 input  int     InpDCA2Max  = 2;     // DCA T2: Max lệnh tổng tại tầng này
 input  double  InpDCA2Dist = 1500.0; // DCA T2: Khoảng cách (points)
@@ -91,7 +94,6 @@ input  double  InpDCA2TP   = 500.0; // DCA T2: TP (points)
 input  double  InpDCA2SL   = 0.0;   // DCA T2: SL (points, 0=tắt)
 
 input group         "══════ DCA - TẦNG 3 ══════"; //
-input  ENUM_DCA_MODE InpDCA3Mode = DCA_STEP;
 input  double  InpDCA3Mult = 2.5;   // DCA T3: Hệ số Lot
 input  int     InpDCA3Max  = 2;     // DCA T3: Max lệnh tổng tại tầng này
 input  double  InpDCA3Dist = 2000.0;// DCA T3: Khoảng cách (points)
@@ -99,7 +101,6 @@ input  double  InpDCA3TP   = 500.0; // DCA T3: TP (points)
 input  double  InpDCA3SL   = 0.0;   // DCA T3: SL (points, 0=tắt)
 
 input group         "══════ DCA - TẦNG 4 ══════"; //
-input  ENUM_DCA_MODE InpDCA4Mode = DCA_STEP;
 input  double  InpDCA4Mult = 3.0;   // DCA T4: Hệ số Lot
 input  int     InpDCA4Max  = 2;     // DCA T4: Max lệnh tổng tại tầng này
 input  double  InpDCA4Dist = 2500.0; // DCA T4: Khoảng cách (points)
@@ -107,7 +108,6 @@ input  double  InpDCA4TP   = 500.0; // DCA T4: TP (points)
 input  double  InpDCA4SL   = 0.0;   // DCA T4: SL (points, 0=tắt)
 
 input group         "══════ DCA - TẦNG 5 ══════"; //
-input  ENUM_DCA_MODE InpDCA5Mode = DCA_STEP;
 input  double  InpDCA5Mult = 3.5;  // DCA T5: Hệ số Lot
 input  int     InpDCA5Max  = 2;    // DCA T5: Max lệnh tổng tại tầng này
 input  double  InpDCA5Dist = 3000.0; // DCA T5: Khoảng cách (points)
@@ -115,7 +115,6 @@ input  double  InpDCA5TP   = 500.0; // DCA T5: TP (points)
 input  double  InpDCA5SL   = 0.0;   // DCA T5: SL (points, 0=tắt)
 
 input group         "══════ DCA - TẦNG 6 ══════"; //
-input  ENUM_DCA_MODE InpDCA6Mode = DCA_STEP;
 input  double  InpDCA6Mult = 4.0; // DCA T6: Hệ số Lot
 input  int     InpDCA6Max  = 2;   // DCA T6: Max lệnh tổng tại tầng này
 input  double  InpDCA6Dist = 3500.0; // DCA T6: Khoảng cách (points)
@@ -123,7 +122,6 @@ input  double  InpDCA6TP   = 500.0; // DCA T6: TP (points)
 input  double  InpDCA6SL   = 0.0;  // DCA T6: SL (points, 0=tắt)
 
 input group         "══════ DCA - TẦNG 7 ══════"; //
-input  ENUM_DCA_MODE InpDCA7Mode = DCA_STEP;
 input  double  InpDCA7Mult = 5.0; // DCA T7: Hệ số Lot
 input  int     InpDCA7Max  = 2;  // DCA T7: Max lệnh tổng tại tầng này
 input  double  InpDCA7Dist = 4000.0; // DCA T7: Khoảng cách (points)
@@ -131,7 +129,6 @@ input  double  InpDCA7TP   = 500.0; // DCA T7: TP (points)
 input  double  InpDCA7SL   = 0.0;  // DCA T7: SL (points, 0=tắt)
 
 input group         "══════ DCA - TẦNG 8 ══════"; //
-input  ENUM_DCA_MODE InpDCA8Mode = DCA_STOP;
 input  double  InpDCA8Mult = 6.0; // DCA T8: Hệ số Lot
 input  int     InpDCA8Max  = 1; // DCA T8: Max lệnh tổng tại tầng này
 input  double  InpDCA8Dist = 5000.0; // DCA T8: Khoảng cách (points)
@@ -629,6 +626,9 @@ void CheckEntry() {
 //| DCA LOGIC                                                        |
 //+------------------------------------------------------------------+
 void CheckDCA(int posType) {
+    if(posType == POSITION_TYPE_BUY  && !InpDCABuyEnable)  return;
+    if(posType == POSITION_TYPE_SELL && !InpDCASellEnable) return;
+
     int count = CountPos(posType);
     if(count == 0) return;
 
@@ -1209,29 +1209,29 @@ void RemoveGUI() { ObjectsDeleteAll(0, GUI); }
 //| INIT DCA ARRAYS                                                  |
 //+------------------------------------------------------------------+
 void InitDCA() {
-    DCA_Mode[0]=InpDCA1Mode; DCA_Mult[0]=InpDCA1Mult; DCA_MaxOrd[0]=InpDCA1Max;
-    DCA_Dist[0]=InpDCA1Dist; DCA_TP[0]=InpDCA1TP;     DCA_SL[0]=InpDCA1SL;
+    DCA_Mode[0]=InpDCAMode; DCA_Mult[0]=InpDCA1Mult; DCA_MaxOrd[0]=InpDCA1Max;
+    DCA_Dist[0]=InpDCA1Dist; DCA_TP[0]=InpDCA1TP;    DCA_SL[0]=InpDCA1SL;
 
-    DCA_Mode[1]=InpDCA2Mode; DCA_Mult[1]=InpDCA2Mult; DCA_MaxOrd[1]=InpDCA2Max;
-    DCA_Dist[1]=InpDCA2Dist; DCA_TP[1]=InpDCA2TP;     DCA_SL[1]=InpDCA2SL;
+    DCA_Mode[1]=InpDCAMode; DCA_Mult[1]=InpDCA2Mult; DCA_MaxOrd[1]=InpDCA2Max;
+    DCA_Dist[1]=InpDCA2Dist; DCA_TP[1]=InpDCA2TP;    DCA_SL[1]=InpDCA2SL;
 
-    DCA_Mode[2]=InpDCA3Mode; DCA_Mult[2]=InpDCA3Mult; DCA_MaxOrd[2]=InpDCA3Max;
-    DCA_Dist[2]=InpDCA3Dist; DCA_TP[2]=InpDCA3TP;     DCA_SL[2]=InpDCA3SL;
+    DCA_Mode[2]=InpDCAMode; DCA_Mult[2]=InpDCA3Mult; DCA_MaxOrd[2]=InpDCA3Max;
+    DCA_Dist[2]=InpDCA3Dist; DCA_TP[2]=InpDCA3TP;    DCA_SL[2]=InpDCA3SL;
 
-    DCA_Mode[3]=InpDCA4Mode; DCA_Mult[3]=InpDCA4Mult; DCA_MaxOrd[3]=InpDCA4Max;
-    DCA_Dist[3]=InpDCA4Dist; DCA_TP[3]=InpDCA4TP;     DCA_SL[3]=InpDCA4SL;
+    DCA_Mode[3]=InpDCAMode; DCA_Mult[3]=InpDCA4Mult; DCA_MaxOrd[3]=InpDCA4Max;
+    DCA_Dist[3]=InpDCA4Dist; DCA_TP[3]=InpDCA4TP;    DCA_SL[3]=InpDCA4SL;
 
-    DCA_Mode[4]=InpDCA5Mode; DCA_Mult[4]=InpDCA5Mult; DCA_MaxOrd[4]=InpDCA5Max;
-    DCA_Dist[4]=InpDCA5Dist; DCA_TP[4]=InpDCA5TP;     DCA_SL[4]=InpDCA5SL;
+    DCA_Mode[4]=InpDCAMode; DCA_Mult[4]=InpDCA5Mult; DCA_MaxOrd[4]=InpDCA5Max;
+    DCA_Dist[4]=InpDCA5Dist; DCA_TP[4]=InpDCA5TP;    DCA_SL[4]=InpDCA5SL;
 
-    DCA_Mode[5]=InpDCA6Mode; DCA_Mult[5]=InpDCA6Mult; DCA_MaxOrd[5]=InpDCA6Max;
-    DCA_Dist[5]=InpDCA6Dist; DCA_TP[5]=InpDCA6TP;     DCA_SL[5]=InpDCA6SL;
+    DCA_Mode[5]=InpDCAMode; DCA_Mult[5]=InpDCA6Mult; DCA_MaxOrd[5]=InpDCA6Max;
+    DCA_Dist[5]=InpDCA6Dist; DCA_TP[5]=InpDCA6TP;    DCA_SL[5]=InpDCA6SL;
 
-    DCA_Mode[6]=InpDCA7Mode; DCA_Mult[6]=InpDCA7Mult; DCA_MaxOrd[6]=InpDCA7Max;
-    DCA_Dist[6]=InpDCA7Dist; DCA_TP[6]=InpDCA7TP;     DCA_SL[6]=InpDCA7SL;
+    DCA_Mode[6]=InpDCAMode; DCA_Mult[6]=InpDCA7Mult; DCA_MaxOrd[6]=InpDCA7Max;
+    DCA_Dist[6]=InpDCA7Dist; DCA_TP[6]=InpDCA7TP;    DCA_SL[6]=InpDCA7SL;
 
-    DCA_Mode[7]=InpDCA8Mode; DCA_Mult[7]=InpDCA8Mult; DCA_MaxOrd[7]=InpDCA8Max;
-    DCA_Dist[7]=InpDCA8Dist; DCA_TP[7]=InpDCA8TP;     DCA_SL[7]=InpDCA8SL;
+    DCA_Mode[7]=InpDCAMode; DCA_Mult[7]=InpDCA8Mult; DCA_MaxOrd[7]=InpDCA8Max;
+    DCA_Dist[7]=InpDCA8Dist; DCA_TP[7]=InpDCA8TP;    DCA_SL[7]=InpDCA8SL;
 }
 
 void InitPyra() {
