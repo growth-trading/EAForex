@@ -400,36 +400,51 @@ ulong BestTicket() {
 }
 
 void CloseAll(int posType = -1) {
+    ulong tickets[];
+    int   count = 0;
+    ArrayResize(tickets, PositionsTotal());
     for(int i = PositionsTotal()-1; i >= 0; i--) {
         ulong tk = PositionGetTicket(i);
         if(!PositionSelectByTicket(tk)) continue;
         if(PositionGetInteger(POSITION_MAGIC) != (long)InpMagic) continue;
         if(PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
         if(posType >= 0 && (int)PositionGetInteger(POSITION_TYPE) != posType) continue;
-        Trade.PositionClose(tk);
+        tickets[count++] = tk;
     }
+    for(int i = 0; i < count; i++)
+        Trade.PositionClose(tickets[i]);
 }
 
 void CloseAllProfit() {
+    ulong tickets[];
+    int   count = 0;
+    ArrayResize(tickets, PositionsTotal());
     for(int i = PositionsTotal()-1; i >= 0; i--) {
         ulong tk = PositionGetTicket(i);
         if(!PositionSelectByTicket(tk)) continue;
         if(PositionGetInteger(POSITION_MAGIC) != (long)InpMagic) continue;
         if(PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
         if(PositionGetDouble(POSITION_PROFIT) + PositionGetDouble(POSITION_SWAP) > 0)
-            Trade.PositionClose(tk);
+            tickets[count++] = tk;
     }
+    for(int i = 0; i < count; i++)
+        Trade.PositionClose(tickets[i]);
 }
 
 void CloseAllLoss() {
+    ulong tickets[];
+    int   count = 0;
+    ArrayResize(tickets, PositionsTotal());
     for(int i = PositionsTotal()-1; i >= 0; i--) {
         ulong tk = PositionGetTicket(i);
         if(!PositionSelectByTicket(tk)) continue;
         if(PositionGetInteger(POSITION_MAGIC) != (long)InpMagic) continue;
         if(PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
         if(PositionGetDouble(POSITION_PROFIT) + PositionGetDouble(POSITION_SWAP) < 0)
-            Trade.PositionClose(tk);
+            tickets[count++] = tk;
     }
+    for(int i = 0; i < count; i++)
+        Trade.PositionClose(tickets[i]);
 }
 
 double NormLot(double lot) {
