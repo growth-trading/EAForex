@@ -1134,8 +1134,8 @@ PeriodStats GetPeriodStats(datetime from, datetime to) {
         double dv = HistoryDealGetDouble(dk, DEAL_VOLUME);
         s.profit += dp;
         s.lot    += dv;
-        if(tickVal > 0 && dv > 0) s.pips += dp / (dv * tickVal);
     }
+    if(tickVal > 0 && s.lot > 0) s.pips = s.profit / (s.lot * tickVal);
     s.gain = (InitBalance > 0) ? s.profit / InitBalance * 100.0 : 0;
     return s;
 }
@@ -1169,6 +1169,23 @@ void DrawHLine(string name, double price, color clr) {
     ObjectSetInteger(0, obj, OBJPROP_COLOR, clr);
     ObjectSetInteger(0, obj, OBJPROP_STYLE, STYLE_DASH);
     ObjectSetInteger(0, obj, OBJPROP_WIDTH, 1);
+}
+
+void CreateRect(string name, int lx, int ly, int lw, int lh, color bg) {
+    string obj = GUI + name;
+    if(ObjectFind(0, obj) >= 0) return;
+    ObjectCreate(0, obj, OBJ_RECTANGLE_LABEL, 0, 0, 0);
+    ObjectSetInteger(0, obj, OBJPROP_CORNER,      CORNER_LEFT_UPPER);
+    ObjectSetInteger(0, obj, OBJPROP_XDISTANCE,   lx);
+    ObjectSetInteger(0, obj, OBJPROP_YDISTANCE,   ly);
+    ObjectSetInteger(0, obj, OBJPROP_XSIZE,       lw);
+    ObjectSetInteger(0, obj, OBJPROP_YSIZE,       lh);
+    ObjectSetInteger(0, obj, OBJPROP_BGCOLOR,     bg);
+    ObjectSetInteger(0, obj, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+    ObjectSetInteger(0, obj, OBJPROP_COLOR,       bg);
+    ObjectSetInteger(0, obj, OBJPROP_WIDTH,       0);
+    ObjectSetInteger(0, obj, OBJPROP_BACK,        false);
+    ObjectSetInteger(0, obj, OBJPROP_SELECTABLE,  false);
 }
 
 void Lbl(string name, string text, int x, int y, color clr = clrSilver, int sz = 9) {
@@ -1329,6 +1346,20 @@ void UpdateGUI() {
     // ── NỘI DUNG PANEL 3 (Thống kê) ──
     y = 528;
     Lbl("P3T", "═══  THỐNG KÊ  ═══", x, y, C'90,140,230', 9); y += s + 2;
+    // y=546: table starts here
+
+    color sepClr = C'45,65,120';
+    int tblTop = y, tblH = 5*(s-2); // (header + 4 data rows) × 14px = 70px
+
+    // Separator lines created BEFORE text so text renders on top (Z-order)
+    // Vertical column dividers
+    CreateRect("P3VC1", 66,  tblTop, 1, tblH, sepClr);
+    CreateRect("P3VC2", 116, tblTop, 1, tblH, sepClr);
+    CreateRect("P3VC3", 168, tblTop, 1, tblH, sepClr);
+    CreateRect("P3VC4", 216, tblTop, 1, tblH, sepClr);
+    // Horizontal dividers: after header + between data rows
+    for(int si = 0; si < 4; si++)
+        CreateRect("P3HR"+IntegerToString(si), 7, tblTop + (si+1)*(s-2) - 1, 248, 1, sepClr);
 
     int cx0=12, cx1=68, cx2=118, cx3=170, cx4=218;
     Lbl("TH0", "Date ",  cx0, y, C'100,125,195', 8);
