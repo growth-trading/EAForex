@@ -138,11 +138,13 @@ input  double  InpDCA8SL   = 0.0; // DCA T8: SL (points, 0=tắt)
 //+------------------------------------------------------------------+
 //| INPUT: PYRAMIDING (NHỒI DƯƠNG)                                   |
 //+------------------------------------------------------------------+
-input group         "══════ NHỒI DƯƠNG (PYRAMIDING) ══════"; //
-input  bool    InpPyraEnable    = false;  // Bật Nhồi Dương
+input group         "══════ NHỒI DƯƠNG (PYRA) ══════"; //
+input  bool          InpPyraEnable    = false;   // Bật Nhồi Dương
+input  ENUM_DCA_MODE InpPyraMode      = DCA_STEP; // PYRA: Chế độ (áp dụng cho tất cả tầng)
+input  bool          InpPyraBuyEnable  = true;    // PYRA: Bật nhồi chiều Buy
+input  bool          InpPyraSellEnable = true;    // PYRA: Bật nhồi chiều Sell
 
 input group         "══════ PYRA - TẦNG 1 ══════"; //
-input  ENUM_DCA_MODE InpPyra1Mode = DCA_STEP; // PYRA T1: Chế độ
 input  double  InpPyra1Mult = 1.0;    // PYRA T1: Hệ số Lot
 input  int     InpPyra1Max  = 2;      // PYRA T1: Max lệnh tổng tại tầng này
 input  double  InpPyra1Dist = 500.0;  // PYRA T1: Khoảng cách (points)
@@ -150,7 +152,6 @@ input  double  InpPyra1TP   = 3000.0; // PYRA T1: TP (points)
 input  double  InpPyra1SL   = 0.0;    // PYRA T1: SL (points, 0=tắt)
 
 input group         "══════ PYRA - TẦNG 2 ══════"; //
-input  ENUM_DCA_MODE InpPyra2Mode = DCA_STEP;
 input  double  InpPyra2Mult = 1.0;    // PYRA T2: Hệ số Lot
 input  int     InpPyra2Max  = 2;      // PYRA T2: Max lệnh tổng tại tầng này
 input  double  InpPyra2Dist = 500.0;  // PYRA T2: Khoảng cách (points)
@@ -158,7 +159,6 @@ input  double  InpPyra2TP   = 3000.0; // PYRA T2: TP (points)
 input  double  InpPyra2SL   = 0.0;    // PYRA T2: SL (points, 0=tắt)
 
 input group         "══════ PYRA - TẦNG 3 ══════"; //
-input  ENUM_DCA_MODE InpPyra3Mode = DCA_STEP;
 input  double  InpPyra3Mult = 1.0;    // PYRA T3: Hệ số Lot
 input  int     InpPyra3Max  = 2;      // PYRA T3: Max lệnh tổng tại tầng này
 input  double  InpPyra3Dist = 500.0;  // PYRA T3: Khoảng cách (points)
@@ -166,7 +166,6 @@ input  double  InpPyra3TP   = 3000.0; // PYRA T3: TP (points)
 input  double  InpPyra3SL   = 0.0;    // PYRA T3: SL (points, 0=tắt)
 
 input group         "══════ PYRA - TẦNG 4 ══════"; //
-input  ENUM_DCA_MODE InpPyra4Mode = DCA_STEP;
 input  double  InpPyra4Mult = 1.0;    // PYRA T4: Hệ số Lot
 input  int     InpPyra4Max  = 2;      // PYRA T4: Max lệnh tổng tại tầng này
 input  double  InpPyra4Dist = 500.0;  // PYRA T4: Khoảng cách (points)
@@ -174,7 +173,6 @@ input  double  InpPyra4TP   = 3000.0; // PYRA T4: TP (points)
 input  double  InpPyra4SL   = 0.0;    // PYRA T4: SL (points, 0=tắt)
 
 input group         "══════ PYRA - TẦNG 5 ══════"; //
-input  ENUM_DCA_MODE InpPyra5Mode = DCA_STEP;
 input  double  InpPyra5Mult = 1.0;    // PYRA T5: Hệ số Lot
 input  int     InpPyra5Max  = 2;      // PYRA T5: Max lệnh tổng tại tầng này
 input  double  InpPyra5Dist = 500.0;  // PYRA T5: Khoảng cách (points)
@@ -182,7 +180,6 @@ input  double  InpPyra5TP   = 3000.0; // PYRA T5: TP (points)
 input  double  InpPyra5SL   = 0.0;    // PYRA T5: SL (points, 0=tắt)
 
 input group         "══════ PYRA - TẦNG 6 ══════"; //
-input  ENUM_DCA_MODE InpPyra6Mode = DCA_STEP;
 input  double  InpPyra6Mult = 1.0;    // PYRA T6: Hệ số Lot
 input  int     InpPyra6Max  = 2;      // PYRA T6: Max lệnh tổng tại tầng này
 input  double  InpPyra6Dist = 500.0;  // PYRA T6: Khoảng cách (points)
@@ -190,7 +187,6 @@ input  double  InpPyra6TP   = 3000.0; // PYRA T6: TP (points)
 input  double  InpPyra6SL   = 0.0;    // PYRA T6: SL (points, 0=tắt)
 
 input group         "══════ PYRA - TẦNG 7 ══════"; //
-input  ENUM_DCA_MODE InpPyra7Mode = DCA_STEP;
 input  double  InpPyra7Mult = 1.0;    // PYRA T7: Hệ số Lot
 input  int     InpPyra7Max  = 2;      // PYRA T7: Max lệnh tổng tại tầng này
 input  double  InpPyra7Dist = 500.0;  // PYRA T7: Khoảng cách (points)
@@ -198,7 +194,6 @@ input  double  InpPyra7TP   = 3000.0; // PYRA T7: TP (points)
 input  double  InpPyra7SL   = 0.0;    // PYRA T7: SL (points, 0=tắt)
 
 input group         "══════ PYRA - TẦNG 8 ══════"; //
-input  ENUM_DCA_MODE InpPyra8Mode = DCA_STOP;
 input  double  InpPyra8Mult = 1.0;    // PYRA T8: Hệ số Lot
 input  int     InpPyra8Max  = 1;      // PYRA T8: Max lệnh tổng tại tầng này
 input  double  InpPyra8Dist = 500.0;  // PYRA T8: Khoảng cách (points)
@@ -264,6 +259,7 @@ double        PYRA_TP[8];
 double        PYRA_SL[8];
 
 datetime LastOrderTime  = 0;
+datetime LastEntryTime  = 0;
 double   InitBalance    = 0.0;
 double   MaxDrawdownPct = 0.0;
 double   DayProfit      = 0.0;
@@ -411,8 +407,10 @@ void CloseAll(int posType = -1) {
         if(posType >= 0 && (int)PositionGetInteger(POSITION_TYPE) != posType) continue;
         tickets[count++] = tk;
     }
+    Trade.SetAsyncMode(true);
     for(int i = 0; i < count; i++)
         Trade.PositionClose(tickets[i]);
+    Trade.SetAsyncMode(false);
 }
 
 void CloseAllProfit() {
@@ -427,8 +425,10 @@ void CloseAllProfit() {
         if(PositionGetDouble(POSITION_PROFIT) + PositionGetDouble(POSITION_SWAP) > 0)
             tickets[count++] = tk;
     }
+    Trade.SetAsyncMode(true);
     for(int i = 0; i < count; i++)
         Trade.PositionClose(tickets[i]);
+    Trade.SetAsyncMode(false);
 }
 
 void CloseAllLoss() {
@@ -443,8 +443,10 @@ void CloseAllLoss() {
         if(PositionGetDouble(POSITION_PROFIT) + PositionGetDouble(POSITION_SWAP) < 0)
             tickets[count++] = tk;
     }
+    Trade.SetAsyncMode(true);
     for(int i = 0; i < count; i++)
         Trade.PositionClose(tickets[i]);
+    Trade.SetAsyncMode(false);
 }
 
 double NormLot(double lot) {
@@ -632,17 +634,19 @@ int GetSignal() {
 void TryOpenBuy() {
     if(CountBuy() >= InpMaxBuy) return;
     if(CountBuy() > 0) return;   // đã có lệnh → DCA xử lý
-    OpenOrder(ORDER_TYPE_BUY, InpLotSize, InpTP_Points, InpSL_Points);
+    if(OpenOrder(ORDER_TYPE_BUY, InpLotSize, InpTP_Points, InpSL_Points))
+        LastEntryTime = TimeCurrent();
 }
 
 void TryOpenSell() {
     if(CountSell() >= InpMaxSell) return;
     if(CountSell() > 0) return;
-    OpenOrder(ORDER_TYPE_SELL, InpLotSize, InpTP_Points, InpSL_Points);
+    if(OpenOrder(ORDER_TYPE_SELL, InpLotSize, InpTP_Points, InpSL_Points))
+        LastEntryTime = TimeCurrent();
 }
 
 void CheckEntry() {
-    if(TimeCurrent() - LastOrderTime < InpOrderDelay) return;
+    if(TimeCurrent() - LastEntryTime < InpOrderDelay) return;
 
     int sig = GetSignal();
     if(sig == 0) return;
@@ -720,6 +724,8 @@ void CheckDCA(int posType) {
 //+------------------------------------------------------------------+
 void CheckPyramiding(int posType) {
     if(!InpPyraEnable) return;
+    if(posType == POSITION_TYPE_BUY  && !InpPyraBuyEnable)  return;
+    if(posType == POSITION_TYPE_SELL && !InpPyraSellEnable) return;
 
     int count = CountPos(posType);
     if(count == 0) return;
@@ -1432,29 +1438,29 @@ void InitDCA() {
 }
 
 void InitPyra() {
-    PYRA_Mode[0]=InpPyra1Mode; PYRA_Mult[0]=InpPyra1Mult; PYRA_MaxOrd[0]=InpPyra1Max;
-    PYRA_Dist[0]=InpPyra1Dist; PYRA_TP[0]=InpPyra1TP;     PYRA_SL[0]=InpPyra1SL;
+    PYRA_Mode[0]=InpPyraMode; PYRA_Mult[0]=InpPyra1Mult; PYRA_MaxOrd[0]=InpPyra1Max;
+    PYRA_Dist[0]=InpPyra1Dist; PYRA_TP[0]=InpPyra1TP;   PYRA_SL[0]=InpPyra1SL;
 
-    PYRA_Mode[1]=InpPyra2Mode; PYRA_Mult[1]=InpPyra2Mult; PYRA_MaxOrd[1]=InpPyra2Max;
-    PYRA_Dist[1]=InpPyra2Dist; PYRA_TP[1]=InpPyra2TP;     PYRA_SL[1]=InpPyra2SL;
+    PYRA_Mode[1]=InpPyraMode; PYRA_Mult[1]=InpPyra2Mult; PYRA_MaxOrd[1]=InpPyra2Max;
+    PYRA_Dist[1]=InpPyra2Dist; PYRA_TP[1]=InpPyra2TP;   PYRA_SL[1]=InpPyra2SL;
 
-    PYRA_Mode[2]=InpPyra3Mode; PYRA_Mult[2]=InpPyra3Mult; PYRA_MaxOrd[2]=InpPyra3Max;
-    PYRA_Dist[2]=InpPyra3Dist; PYRA_TP[2]=InpPyra3TP;     PYRA_SL[2]=InpPyra3SL;
+    PYRA_Mode[2]=InpPyraMode; PYRA_Mult[2]=InpPyra3Mult; PYRA_MaxOrd[2]=InpPyra3Max;
+    PYRA_Dist[2]=InpPyra3Dist; PYRA_TP[2]=InpPyra3TP;   PYRA_SL[2]=InpPyra3SL;
 
-    PYRA_Mode[3]=InpPyra4Mode; PYRA_Mult[3]=InpPyra4Mult; PYRA_MaxOrd[3]=InpPyra4Max;
-    PYRA_Dist[3]=InpPyra4Dist; PYRA_TP[3]=InpPyra4TP;     PYRA_SL[3]=InpPyra4SL;
+    PYRA_Mode[3]=InpPyraMode; PYRA_Mult[3]=InpPyra4Mult; PYRA_MaxOrd[3]=InpPyra4Max;
+    PYRA_Dist[3]=InpPyra4Dist; PYRA_TP[3]=InpPyra4TP;   PYRA_SL[3]=InpPyra4SL;
 
-    PYRA_Mode[4]=InpPyra5Mode; PYRA_Mult[4]=InpPyra5Mult; PYRA_MaxOrd[4]=InpPyra5Max;
-    PYRA_Dist[4]=InpPyra5Dist; PYRA_TP[4]=InpPyra5TP;     PYRA_SL[4]=InpPyra5SL;
+    PYRA_Mode[4]=InpPyraMode; PYRA_Mult[4]=InpPyra5Mult; PYRA_MaxOrd[4]=InpPyra5Max;
+    PYRA_Dist[4]=InpPyra5Dist; PYRA_TP[4]=InpPyra5TP;   PYRA_SL[4]=InpPyra5SL;
 
-    PYRA_Mode[5]=InpPyra6Mode; PYRA_Mult[5]=InpPyra6Mult; PYRA_MaxOrd[5]=InpPyra6Max;
-    PYRA_Dist[5]=InpPyra6Dist; PYRA_TP[5]=InpPyra6TP;     PYRA_SL[5]=InpPyra6SL;
+    PYRA_Mode[5]=InpPyraMode; PYRA_Mult[5]=InpPyra6Mult; PYRA_MaxOrd[5]=InpPyra6Max;
+    PYRA_Dist[5]=InpPyra6Dist; PYRA_TP[5]=InpPyra6TP;   PYRA_SL[5]=InpPyra6SL;
 
-    PYRA_Mode[6]=InpPyra7Mode; PYRA_Mult[6]=InpPyra7Mult; PYRA_MaxOrd[6]=InpPyra7Max;
-    PYRA_Dist[6]=InpPyra7Dist; PYRA_TP[6]=InpPyra7TP;     PYRA_SL[6]=InpPyra7SL;
+    PYRA_Mode[6]=InpPyraMode; PYRA_Mult[6]=InpPyra7Mult; PYRA_MaxOrd[6]=InpPyra7Max;
+    PYRA_Dist[6]=InpPyra7Dist; PYRA_TP[6]=InpPyra7TP;   PYRA_SL[6]=InpPyra7SL;
 
-    PYRA_Mode[7]=InpPyra8Mode; PYRA_Mult[7]=InpPyra8Mult; PYRA_MaxOrd[7]=InpPyra8Max;
-    PYRA_Dist[7]=InpPyra8Dist; PYRA_TP[7]=InpPyra8TP;     PYRA_SL[7]=InpPyra8SL;
+    PYRA_Mode[7]=InpPyraMode; PYRA_Mult[7]=InpPyra8Mult; PYRA_MaxOrd[7]=InpPyra8Max;
+    PYRA_Dist[7]=InpPyra8Dist; PYRA_TP[7]=InpPyra8TP;   PYRA_SL[7]=InpPyra8SL;
 }
 
 //+------------------------------------------------------------------+
@@ -1484,6 +1490,7 @@ int OnInit() {
     MaxDrawdownPct = 0;
     TrailBuy       = 0;
     TrailSell      = 0;
+    LastEntryTime  = 0;
     LastDay        = -1;
 
     EventSetTimer(1);
