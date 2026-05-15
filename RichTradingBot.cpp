@@ -410,6 +410,28 @@ void CloseAll(int posType = -1) {
     }
 }
 
+void CloseAllProfit() {
+    for(int i = PositionsTotal()-1; i >= 0; i--) {
+        ulong tk = PositionGetTicket(i);
+        if(!PositionSelectByTicket(tk)) continue;
+        if(PositionGetInteger(POSITION_MAGIC) != (long)InpMagic) continue;
+        if(PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+        if(PositionGetDouble(POSITION_PROFIT) + PositionGetDouble(POSITION_SWAP) > 0)
+            Trade.PositionClose(tk);
+    }
+}
+
+void CloseAllLoss() {
+    for(int i = PositionsTotal()-1; i >= 0; i--) {
+        ulong tk = PositionGetTicket(i);
+        if(!PositionSelectByTicket(tk)) continue;
+        if(PositionGetInteger(POSITION_MAGIC) != (long)InpMagic) continue;
+        if(PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+        if(PositionGetDouble(POSITION_PROFIT) + PositionGetDouble(POSITION_SWAP) < 0)
+            Trade.PositionClose(tk);
+    }
+}
+
 double NormLot(double lot) {
     double minL  = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
     double maxL  = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX);
@@ -1081,6 +1103,49 @@ void UpdateDayProfit() {
 //+------------------------------------------------------------------+
 //| GUI                                                              |
 //+------------------------------------------------------------------+
+struct PeriodStats { double pips, profit, gain, lot; };
+
+PeriodStats GetPeriodStats(datetime from, datetime to) {
+    PeriodStats s;
+    s.pips = s.profit = s.gain = s.lot = 0;
+    if(!HistorySelect(from, to)) return s;
+    double tickVal = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
+    for(int i = 0; i < HistoryDealsTotal(); i++) {
+        ulong dk = HistoryDealGetTicket(i);
+        if(HistoryDealGetString(dk, DEAL_SYMBOL) != _Symbol) continue;
+        ENUM_DEAL_ENTRY de = (ENUM_DEAL_ENTRY)HistoryDealGetInteger(dk, DEAL_ENTRY);
+        if(de != DEAL_ENTRY_OUT && de != DEAL_ENTRY_OUT_BY) continue;
+        double dp = HistoryDealGetDouble(dk, DEAL_PROFIT) + HistoryDealGetDouble(dk, DEAL_SWAP);
+        double dv = HistoryDealGetDouble(dk, DEAL_VOLUME);
+        s.profit += dp;
+        s.lot    += dv;
+        if(tickVal > 0 && dv > 0) s.pips += dp / (dv * tickVal);
+    }
+    s.gain = (InitBalance > 0) ? s.profit / InitBalance * 100.0 : 0;
+    return s;
+}
+
+void CreateBtn(string name, string text, int x, int y, int w, int h, color bgClr, color borderClr = clrSilver) {
+    string obj = GUI + name;
+    if(ObjectFind(0, obj) < 0) {
+        ObjectCreate(0, obj, OBJ_BUTTON, 0, 0, 0);
+        ObjectSetInteger(0, obj, OBJPROP_CORNER,     CORNER_LEFT_UPPER);
+        ObjectSetInteger(0, obj, OBJPROP_XDISTANCE,  x);
+        ObjectSetInteger(0, obj, OBJPROP_YDISTANCE,  y);
+        ObjectSetInteger(0, obj, OBJPROP_XSIZE,      w);
+        ObjectSetInteger(0, obj, OBJPROP_YSIZE,      h);
+        ObjectSetString(0,  obj, OBJPROP_FONT,       "Consolas");
+        ObjectSetInteger(0, obj, OBJPROP_FONTSIZE,   8);
+        ObjectSetInteger(0, obj, OBJPROP_BACK,       false);
+        ObjectSetInteger(0, obj, OBJPROP_SELECTABLE, false);
+    }
+    ObjectSetString(0,  obj, OBJPROP_TEXT,         text);
+    ObjectSetInteger(0, obj, OBJPROP_COLOR,        clrWhite);
+    ObjectSetInteger(0, obj, OBJPROP_BGCOLOR,      bgClr);
+    ObjectSetInteger(0, obj, OBJPROP_BORDER_COLOR, borderClr);
+    ObjectSetInteger(0, obj, OBJPROP_STATE,        false);
+}
+
 void DrawHLine(string name, double price, color clr) {
     string obj = GUI + name;
     if(ObjectFind(0, obj) < 0)
@@ -1158,47 +1223,133 @@ void UpdateGUI() {
     color cSellP  = (sellProfit  >= 0) ? clrLimeGreen : clrTomato;
     color cDayP   = (DayProfit   >= 0) ? clrLimeGreen : clrTomato;
 
-    // Background
+    // ── PANEL 1: THÔNG TIN ──
     string bg = GUI + "BG";
     if(ObjectFind(0, bg) < 0) {
         ObjectCreate(0, bg, OBJ_RECTANGLE_LABEL, 0, 0, 0);
-        ObjectSetInteger(0, bg, OBJPROP_CORNER,    CORNER_LEFT_UPPER);
-        ObjectSetInteger(0, bg, OBJPROP_XDISTANCE, 5);
-        ObjectSetInteger(0, bg, OBJPROP_YDISTANCE, 18);
-        ObjectSetInteger(0, bg, OBJPROP_XSIZE,     248);
-        ObjectSetInteger(0, bg, OBJPROP_YSIZE,     381);
-        ObjectSetInteger(0, bg, OBJPROP_BGCOLOR,   C'15,18,28');
+        ObjectSetInteger(0, bg, OBJPROP_CORNER,      CORNER_LEFT_UPPER);
+        ObjectSetInteger(0, bg, OBJPROP_XDISTANCE,   5);
+        ObjectSetInteger(0, bg, OBJPROP_YDISTANCE,   18);
+        ObjectSetInteger(0, bg, OBJPROP_XSIZE,       252);
+        ObjectSetInteger(0, bg, OBJPROP_YSIZE,       330);
+        ObjectSetInteger(0, bg, OBJPROP_BGCOLOR,     C'14,17,26');
         ObjectSetInteger(0, bg, OBJPROP_BORDER_TYPE, BORDER_FLAT);
-        ObjectSetInteger(0, bg, OBJPROP_COLOR,     C'40,50,90');
-        ObjectSetInteger(0, bg, OBJPROP_WIDTH,     1);
-        ObjectSetInteger(0, bg, OBJPROP_BACK,      false);
-        ObjectSetInteger(0, bg, OBJPROP_SELECTABLE,false);
+        ObjectSetInteger(0, bg, OBJPROP_COLOR,       C'50,65,120');
+        ObjectSetInteger(0, bg, OBJPROP_WIDTH,       1);
+        ObjectSetInteger(0, bg, OBJPROP_BACK,        false);
+        ObjectSetInteger(0, bg, OBJPROP_SELECTABLE,  false);
     }
 
+    // ── PANEL 2: ĐIỀU KHIỂN ──
+    string bg2 = GUI + "BG2";
+    if(ObjectFind(0, bg2) < 0) {
+        ObjectCreate(0, bg2, OBJ_RECTANGLE_LABEL, 0, 0, 0);
+        ObjectSetInteger(0, bg2, OBJPROP_CORNER,      CORNER_LEFT_UPPER);
+        ObjectSetInteger(0, bg2, OBJPROP_XDISTANCE,   5);
+        ObjectSetInteger(0, bg2, OBJPROP_YDISTANCE,   378);
+        ObjectSetInteger(0, bg2, OBJPROP_XSIZE,       252);
+        ObjectSetInteger(0, bg2, OBJPROP_YSIZE,       110);
+        ObjectSetInteger(0, bg2, OBJPROP_BGCOLOR,     C'17,21,32');
+        ObjectSetInteger(0, bg2, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+        ObjectSetInteger(0, bg2, OBJPROP_COLOR,       C'65,90,160');
+        ObjectSetInteger(0, bg2, OBJPROP_WIDTH,       1);
+        ObjectSetInteger(0, bg2, OBJPROP_BACK,        false);
+        ObjectSetInteger(0, bg2, OBJPROP_SELECTABLE,  false);
+    }
+
+    // ── PANEL 3: THỐNG KÊ ──
+    string bg3 = GUI + "BG3";
+    if(ObjectFind(0, bg3) < 0) {
+        ObjectCreate(0, bg3, OBJ_RECTANGLE_LABEL, 0, 0, 0);
+        ObjectSetInteger(0, bg3, OBJPROP_CORNER,      CORNER_LEFT_UPPER);
+        ObjectSetInteger(0, bg3, OBJPROP_XDISTANCE,   5);
+        ObjectSetInteger(0, bg3, OBJPROP_YDISTANCE,   518);
+        ObjectSetInteger(0, bg3, OBJPROP_XSIZE,       252);
+        ObjectSetInteger(0, bg3, OBJPROP_YSIZE,       115);
+        ObjectSetInteger(0, bg3, OBJPROP_BGCOLOR,     C'14,19,28');
+        ObjectSetInteger(0, bg3, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+        ObjectSetInteger(0, bg3, OBJPROP_COLOR,       C'50,70,130');
+        ObjectSetInteger(0, bg3, OBJPROP_WIDTH,       1);
+        ObjectSetInteger(0, bg3, OBJPROP_BACK,        false);
+        ObjectSetInteger(0, bg3, OBJPROP_SELECTABLE,  false);
+    }
+
+    // ── NỘI DUNG PANEL 1 ──
     int x = 12, y = 23, s = 16;
     Lbl("T",    " RICH TRADING BOT  v1.0",   x, y, C'80,160,255', 10); y += s+2;
-    Lbl("L0",   "────────────────────────",   x, y, C'40,50,90'  );     y += s-2;
+    Lbl("L0",   "────────────────────────",   x, y, C'45,58,105'  );    y += s-2;
     Lbl("Tim",  "Time   : " + tStr,           x, y, clrSilver     );    y += s;
     Lbl("Sig",  "Signal : " + sigName,        x, y, clrYellow     );    y += s;
     Lbl("Dir",  "Direct : " + dirName,        x, y, dirClr        );    y += s;
-    Lbl("L1",   "────────────────────────",   x, y, C'40,50,90'  );     y += s-2;
-    Lbl("Bal",  StringFormat("Balance: $%.2f", balance),   x, y, clrSilver);  y += s;
-    Lbl("Ini",  StringFormat("Initial: $%.2f", InitBalance),x, y, clrSilver); y += s;
-    Lbl("DayP", StringFormat("Day P/L: $%.2f", DayProfit), x, y, cDayP);      y += s;
+    Lbl("L1",   "────────────────────────",   x, y, C'45,58,105'  );    y += s-2;
+    Lbl("Bal",  StringFormat("Balance: $%.2f", balance),    x, y, clrSilver); y += s;
+    Lbl("Ini",  StringFormat("Initial: $%.2f", InitBalance), x, y, clrSilver); y += s;
+    Lbl("DayP", StringFormat("Day P/L: $%.2f", DayProfit),  x, y, cDayP);     y += s;
     Lbl("FP",   StringFormat("Float  : $%.2f  (%.2f%%)", totalProfit, pnlPct),
                 x, y, cProfit);                                                y += s;
-    Lbl("L2",   "────────────────────────",   x, y, C'40,50,90'  );     y += s-2;
-    Lbl("DD",   StringFormat("DD Now : %.2f%%", ddPct),    x, y,
+    Lbl("L2",   "────────────────────────",   x, y, C'45,58,105'  );    y += s-2;
+    Lbl("DD",   StringFormat("DD Now : %.2f%%", ddPct),     x, y,
                 ddPct > 15 ? clrOrangeRed : clrSilver);                       y += s;
     Lbl("MDD",  StringFormat("DD Max : %.2f%%", MaxDrawdownPct), x, y,
                 MaxDrawdownPct > 25 ? clrTomato : clrSilver);                 y += s;
-    Lbl("Sprd", StringFormat("Spread : %.0f pts", spread), x, y, clrSilver);  y += s;
-    Lbl("L3",   "────────────────────────",   x, y, C'40,50,90'  );     y += s-2;
+    Lbl("Sprd", StringFormat("Spread : %.0f pts", spread),  x, y, clrSilver); y += s;
+    Lbl("L3",   "────────────────────────",   x, y, C'45,58,105'  );    y += s-2;
     Lbl("BuyP", StringFormat("Buy P/L: $%.2f", buyProfit),  x, y, cBuyP);     y += s;
     Lbl("BuyC", StringFormat("Buy Ord: %d   Lot: %.2f", nBuy,  lotBuy),  x, y, clrSilver); y += s;
     Lbl("SelP", StringFormat("Sel P/L: $%.2f", sellProfit), x, y, cSellP);    y += s;
     Lbl("SelC", StringFormat("Sel Ord: %d   Lot: %.2f", nSell, lotSell), x, y, clrSilver); y += s;
     Lbl("Tot",  StringFormat("Total  : %d orders", nBuy + nSell), x, y, clrSilver);        y += s;
+
+    // ── NỘI DUNG PANEL 2 (Nút điều khiển) ──
+    y = 388;
+    Lbl("P2T", "═══  ĐIỀU KHIỂN LỆNH  ═══", x, y, C'90,140,230', 9); y += s + 2;
+
+    int bh = 22;
+    CreateBtn("BtnCloseAll",    "  Close All",     12,  y, 234, bh, C'20,60,150',  C'80,130,230'); y += bh + 4;
+    CreateBtn("BtnCloseBuy",    "▲ Close Buy",     12,  y, 114, bh, C'0,105,45',   C'45,185,90' );
+    CreateBtn("BtnCloseProfit", "$ Close Profit",  130, y, 114, bh, C'0,110,100',  C'40,190,170'); y += bh + 4;
+    CreateBtn("BtnCloseSell",   "▼ Close Sell",    12,  y, 114, bh, C'145,15,15',  C'230,65,65' );
+    CreateBtn("BtnCloseLoss",   "✕ Close Loss",    130, y, 114, bh, C'140,35,20',  C'210,80,55' );
+
+    // ── NỘI DUNG PANEL 3 (Thống kê) ──
+    y = 528;
+    Lbl("P3T", "═══  THỐNG KÊ  ═══", x, y, C'90,140,230', 9); y += s + 2;
+
+    int cx0=12, cx1=68, cx2=118, cx3=170, cx4=218;
+    Lbl("TH0", "Date ",  cx0, y, C'100,125,195', 8);
+    Lbl("TH1", "Pips ",  cx1, y, C'100,125,195', 8);
+    Lbl("TH2", "Profit", cx2, y, C'100,125,195', 8);
+    Lbl("TH3", "Gain ",  cx3, y, C'100,125,195', 8);
+    Lbl("TH4", "Lot  ",  cx4, y, C'100,125,195', 8);
+    y += s - 2;
+
+    TimeToStruct(TimeCurrent(), dt);
+    datetime todayStart = StringToTime(StringFormat("%04d.%02d.%02d 00:00:00", dt.year, dt.mon, dt.day));
+    int dow = dt.day_of_week; if(dow == 0) dow = 7;
+    datetime weekStart  = todayStart - (dow - 1) * 86400;
+    datetime monthStart = StringToTime(StringFormat("%04d.%02d.01 00:00:00", dt.year, dt.mon));
+    datetime yearStart  = StringToTime(StringFormat("%04d.01.01 00:00:00", dt.year));
+    datetime nowT       = TimeCurrent();
+
+    PeriodStats allStats[4];
+    allStats[0] = GetPeriodStats(todayStart, nowT);
+    allStats[1] = GetPeriodStats(weekStart,  nowT);
+    allStats[2] = GetPeriodStats(monthStart, nowT);
+    allStats[3] = GetPeriodStats(yearStart,  nowT);
+
+    string rowKeys[4];
+    rowKeys[0]="Today"; rowKeys[1]="Week"; rowKeys[2]="Month"; rowKeys[3]="Year";
+
+    for(int r = 0; r < 4; r++) {
+        color rc = (allStats[r].profit >= 0) ? clrLimeGreen : clrTomato;
+        string ri = IntegerToString(r);
+        Lbl("TR"+ri+"L", rowKeys[r],                                cx0, y, clrSilver, 8);
+        Lbl("TR"+ri+"P", StringFormat("%.0f",   allStats[r].pips),  cx1, y, rc, 8);
+        Lbl("TR"+ri+"$", StringFormat("$%.1f",  allStats[r].profit), cx2, y, rc, 8);
+        Lbl("TR"+ri+"G", StringFormat("%.1f%%", allStats[r].gain),  cx3, y, rc, 8);
+        Lbl("TR"+ri+"V", StringFormat("%.2f",   allStats[r].lot),   cx4, y, clrSilver, 8);
+        y += s - 2;
+    }
 
     ChartRedraw(0);
 }
@@ -1345,4 +1496,16 @@ void OnTradeTransaction(const MqlTradeTransaction& trans,
         UpdateDayProfit();
         UpdateGUI();
     }
+}
+
+void OnChartEvent(const int id, const long& lparam, const double& dparam, const string& sparam) {
+    if(id != CHARTEVENT_OBJECT_CLICK) return;
+    if     (sparam == GUI + "BtnCloseAll")    CloseAll();
+    else if(sparam == GUI + "BtnCloseBuy")    CloseAll(POSITION_TYPE_BUY);
+    else if(sparam == GUI + "BtnCloseSell")   CloseAll(POSITION_TYPE_SELL);
+    else if(sparam == GUI + "BtnCloseProfit") CloseAllProfit();
+    else if(sparam == GUI + "BtnCloseLoss")   CloseAllLoss();
+    else return;
+    ObjectSetInteger(0, sparam, OBJPROP_STATE, false);
+    ChartRedraw(0);
 }
