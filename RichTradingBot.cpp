@@ -19,11 +19,13 @@ enum ENUM_SIGNAL_MODE  { SIG_EMA, SIG_BZ_ZONE, SIG_ICHIMOKU, SIG_BB, SIG_SIMULAT
 enum ENUM_DIRECTION    { DIR_BOTH, DIR_ONLY_BUY, DIR_ONLY_SELL, DIR_EITHER };
 enum ENUM_DCA_MODE     { DCA_STOP, DCA_STEP, DCA_STEP_TF };
 enum ENUM_TRAIL_MODE   { TRAIL_BASKET, TRAIL_SINGLE };
+enum ENUM_BOT_MODE     { MODE_AUTO, MODE_SEMI_AUTO };
 
 //+------------------------------------------------------------------+
 //| INPUT: BASE SETTINGS                                             |
 //+------------------------------------------------------------------+
 input group         "══════ CÀI ĐẶT CƠ BẢN ══════"; //
+input  ENUM_BOT_MODE InpBotMode = MODE_AUTO;  // Chế độ: Tự động / Bán tự động
 input  double  InpLotSize      = 0.01;    // Lots ban đầu
 input  bool    InpUseTakeProfit= true;    // Dùng Take Profit (Use_TP)
 input  bool    InpUseStopLoss  = false;   // Dùng Stop Loss (Use_SL)
@@ -139,7 +141,6 @@ input  double  InpDCA8SL   = 0.0; // DCA T8: SL (points, 0=tắt)
 //| INPUT: PYRAMIDING (NHỒI DƯƠNG)                                   |
 //+------------------------------------------------------------------+
 input group         "══════ NHỒI DƯƠNG (PYRA) ══════"; //
-input  bool          InpPyraEnable    = false;   // Bật Nhồi Dương
 input  ENUM_DCA_MODE InpPyraMode      = DCA_STEP; // PYRA: Chế độ (áp dụng cho tất cả tầng)
 input  bool          InpPyraBuyEnable  = true;    // PYRA: Bật nhồi chiều Buy
 input  bool          InpPyraSellEnable = true;    // PYRA: Bật nhồi chiều Sell
@@ -646,6 +647,7 @@ void TryOpenSell() {
 }
 
 void CheckEntry() {
+    if(InpBotMode == MODE_SEMI_AUTO) return;
     if(TimeCurrent() - LastEntryTime < InpOrderDelay) return;
 
     int sig = GetSignal();
@@ -723,7 +725,6 @@ void CheckDCA(int posType) {
 //| PYRAMIDING (NHỒI DƯƠNG)                                          |
 //+------------------------------------------------------------------+
 void CheckPyramiding(int posType) {
-    if(!InpPyraEnable) return;
     if(posType == POSITION_TYPE_BUY  && !InpPyraBuyEnable)  return;
     if(posType == POSITION_TYPE_SELL && !InpPyraSellEnable) return;
 
@@ -1269,7 +1270,7 @@ void UpdateGUI() {
         ObjectSetInteger(0, bg, OBJPROP_XDISTANCE,   5);
         ObjectSetInteger(0, bg, OBJPROP_YDISTANCE,   18);
         ObjectSetInteger(0, bg, OBJPROP_XSIZE,       252);
-        ObjectSetInteger(0, bg, OBJPROP_YSIZE,       330);
+        ObjectSetInteger(0, bg, OBJPROP_YSIZE,       346);
         ObjectSetInteger(0, bg, OBJPROP_BGCOLOR,     C'14,17,26');
         ObjectSetInteger(0, bg, OBJPROP_BORDER_TYPE, BORDER_FLAT);
         ObjectSetInteger(0, bg, OBJPROP_COLOR,       C'50,65,120');
@@ -1318,6 +1319,9 @@ void UpdateGUI() {
     Lbl("L0",   "────────────────────────",   x, y, C'45,58,105'  );    y += s-2;
     Lbl("Tim",  "Time   : " + tStr,           x, y, clrSilver     );    y += s;
     Lbl("Sig",  "Signal : " + sigName,        x, y, clrYellow     );    y += s;
+    string modeName = (InpBotMode == MODE_SEMI_AUTO) ? "Ban Tu Dong" : "Tu Dong";
+    color  modeClr  = (InpBotMode == MODE_SEMI_AUTO) ? clrOrange    : clrLimeGreen;
+    Lbl("Mod",  "Mode   : " + modeName,       x, y, modeClr       );    y += s;
     Lbl("Dir",  "Direct : " + dirName,        x, y, dirClr        );    y += s;
     Lbl("L1",   "────────────────────────",   x, y, C'45,58,105'  );    y += s-2;
     Lbl("Bal",  StringFormat("Balance: $%.2f", balance),    x, y, clrSilver); y += s;
@@ -1401,6 +1405,34 @@ void UpdateGUI() {
         Lbl("TR"+ri+"G", StringFormat("%.1f%%", allStats[r].gain),  cx3, y, rc, 8);
         Lbl("TR"+ri+"V", StringFormat("%.2f",   allStats[r].lot),   cx4, y, clrSilver, 8);
         y += s - 2;
+    }
+
+    // ── PANEL 4: VÀO LỆNH THỦ CÔNG (chỉ hiện khi Bán Tự Động) ──
+    if(InpBotMode == MODE_SEMI_AUTO) {
+        string bg4 = GUI + "BG4";
+        if(ObjectFind(0, bg4) < 0) {
+            ObjectCreate(0, bg4, OBJ_RECTANGLE_LABEL, 0, 0, 0);
+            ObjectSetInteger(0, bg4, OBJPROP_CORNER,      CORNER_LEFT_UPPER);
+            ObjectSetInteger(0, bg4, OBJPROP_XDISTANCE,   5);
+            ObjectSetInteger(0, bg4, OBJPROP_YDISTANCE,   675);
+            ObjectSetInteger(0, bg4, OBJPROP_XSIZE,       252);
+            ObjectSetInteger(0, bg4, OBJPROP_YSIZE,       58);
+            ObjectSetInteger(0, bg4, OBJPROP_BGCOLOR,     C'20,14,14');
+            ObjectSetInteger(0, bg4, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+            ObjectSetInteger(0, bg4, OBJPROP_COLOR,       C'160,60,60');
+            ObjectSetInteger(0, bg4, OBJPROP_WIDTH,       1);
+            ObjectSetInteger(0, bg4, OBJPROP_BACK,        false);
+            ObjectSetInteger(0, bg4, OBJPROP_SELECTABLE,  false);
+        }
+        int y4 = 685;
+        Lbl("P4T", "═══  VÀO LỆNH THỦ CÔNG  ═══", x, y4, C'230,100,100', 9); y4 += s + 2;
+        CreateBtn("BtnOpenBuy",  "▲ Open Buy",  12,  y4, 114, bh, C'0,80,20',  C'30,200,80');
+        CreateBtn("BtnOpenSell", "▼ Open Sell", 130, y4, 114, bh, C'100,0,0',  C'220,40,40');
+    } else {
+        ObjectDelete(0, GUI + "BG4");
+        ObjectDelete(0, GUI + "P4T");
+        ObjectDelete(0, GUI + "BtnOpenBuy");
+        ObjectDelete(0, GUI + "BtnOpenSell");
     }
 
     ChartRedraw(0);
@@ -1558,6 +1590,8 @@ void OnChartEvent(const int id, const long& lparam, const double& dparam, const 
     else if(sparam == GUI + "BtnCloseSell")   CloseAll(POSITION_TYPE_SELL);
     else if(sparam == GUI + "BtnCloseProfit") CloseAllProfit();
     else if(sparam == GUI + "BtnCloseLoss")   CloseAllLoss();
+    else if(sparam == GUI + "BtnOpenBuy")     OpenOrder(ORDER_TYPE_BUY,  InpLotSize, InpTP_Points, InpSL_Points);
+    else if(sparam == GUI + "BtnOpenSell")    OpenOrder(ORDER_TYPE_SELL, InpLotSize, InpTP_Points, InpSL_Points);
     else return;
     ObjectSetInteger(0, sparam, OBJPROP_STATE, false);
     ChartRedraw(0);
